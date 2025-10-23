@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LeetCode Tracker — система интервального повторения задач">
+    <title>LeetCode Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Шапка приложения -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="app-title">LeetCode Tracker</h1>
+                <p class="app-subtitle">Система интервального повторения задач</p>
+            </div>
+            <div class="header-right">
+                <span class="user-greeting" id="user-greeting"></span>
+                <button type="button" class="btn btn-secondary btn-small" id="logout-btn" aria-label="Выйти из аккаунта">
+                    Выйти
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контейнер приложения -->
+    <div class="app-container">
+        <!-- Навигация -->
+        <nav class="app-nav" role="navigation" aria-label="Основная навигация">
+            <ul class="nav-list">
+                <li>
+                    <button 
+                        type="button" 
+                        class="nav-button active" 
+                        data-screen="home"
+                        aria-label="Перейти на главный экран"
+                        aria-current="page">
+                        <span class="nav-icon" aria-hidden="true">🏠</span>
+                        <span class="nav-text">Главная</span>
+                    </button>
+                </li>
+                <li>
+                    <button 
+                        type="button" 
+                        class="nav-button" 
+                        data-screen="add"
+                        aria-label="Перейти к добавлению задачи">
+                        <span class="nav-icon" aria-hidden="true">➕</span>
+                        <span class="nav-text">Добавить</span>
+                    </button>
+                </li>
+                <li>
+                    <button 
+                        type="button" 
+                        class="nav-button" 
+                        data-screen="stats"
+                        aria-label="Перейти к статистике">
+                        <span class="nav-icon" aria-hidden="true">📊</span>
+                        <span class="nav-text">Статистика</span>
+                    </button>
+                </li>
+                <li>
+                    <button 
+                        type="button" 
+                        class="nav-button" 
+                        data-screen="settings"
+                        aria-label="Перейти к настройкам">
+                        <span class="nav-icon" aria-hidden="true">⚙️</span>
+                        <span class="nav-text">Настройки</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Главный контент -->
+        <main class="app-main" role="main">
+            <!-- Экран 1: Главная страница -->
+            <section id="home-screen" class="screen active" aria-labelledby="home-title">
+                <header class="screen-header">
+                    <h2 id="home-title" class="screen-title">Сегодняшние задачи</h2>
+                    <p class="tasks-counter" aria-live="polite">
+                        Задач на сегодня: <strong id="tasks-count">0</strong>
+                    </p>
+                </header>
+
+                <div class="screen-actions">
+                    <button 
+                        type="button" 
+                        id="repeat-all-btn" 
+                        class="btn btn-primary"
+                        aria-label="Повторить все задачи по очереди">
+                        Повторить все
+                    </button>
+                </div>
+
+                <div id="tasks-list" class="tasks-list" role="list">
+                    <!-- Задачи будут добавлены через JavaScript -->
+                    <div class="empty-state" id="empty-state">
+                        <p class="empty-icon" aria-hidden="true">📝</p>
+                        <p class="empty-text">Пока нет задач на сегодня</p>
+                        <button 
+                            type="button" 
+                            class="btn btn-secondary" 
+                            data-screen="add"
+                            aria-label="Добавить первую задачу">
+                            Добавить первую задачу
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Экран 2: Добавление задачи -->
+            <section id="add-screen" class="screen" aria-labelledby="add-title">
+                <header class="screen-header">
+                    <h2 id="add-title" class="screen-title">Добавить задачу</h2>
+                </header>
+
+                <form id="add-task-form" class="task-form" novalidate>
+                    <!-- Ссылка на задачу -->
+                    <div class="form-group">
+                        <label for="task-url" class="form-label">
+                            Ссылка на задачу
+                            <span class="form-required" aria-label="обязательное поле">*</span>
+                        </label>
+                        <input 
+                            type="url" 
+                            id="task-url" 
+                            name="url" 
+                            class="form-input"
+                            placeholder="https://leetcode.com/problems/..."
+                            aria-describedby="task-url-hint task-url-error"
+                            required>
+                        <small id="task-url-hint" class="form-hint">
+                            Введите корректный URL задачи
+                        </small>
+                        <span id="task-url-error" class="form-error" role="alert" aria-live="polite"></span>
+                    </div>
+
+                    <!-- Название задачи -->
+                    <div class="form-group">
+                        <label for="task-name" class="form-label">
+                            Название задачи
+                            <span class="form-required" aria-label="обязательное поле">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="task-name" 
+                            name="name" 
+                            class="form-input"
+                            placeholder="Two Sum"
+                            aria-describedby="task-name-error"
+                            required
+                            minlength="3"
+                            maxlength="200">
+                        <span id="task-name-error" class="form-error" role="alert" aria-live="polite"></span>
+                    </div>
+
+                    <!-- Сложность -->
+                    <div class="form-group">
+                        <label for="task-difficulty" class="form-label">
+                            Сложность
+                            <span class="form-required" aria-label="обязательное поле">*</span>
+                        </label>
+                        <select 
+                            id="task-difficulty" 
+                            name="difficulty" 
+                            class="form-select"
+                            aria-describedby="task-difficulty-error"
+                            required>
+                            <option value="">Выберите сложность</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                        <span id="task-difficulty-error" class="form-error" role="alert" aria-live="polite"></span>
+                    </div>
+
+                    <!-- Темы -->
+                    <div class="form-group">
+                        <label for="task-topics" class="form-label">
+                            Темы
+                        </label>
+                        <input 
+                            type="text" 
+                            id="task-topics" 
+                            name="topics" 
+                            class="form-input"
+                            placeholder="Array, Hash Table, Two Pointers"
+                            aria-describedby="task-topics-hint">
+                        <small id="task-topics-hint" class="form-hint">
+                            Перечислите темы через запятую
+                        </small>
+                    </div>
+
+                    <!-- Заметки -->
+                    <div class="form-group">
+                        <label for="task-notes" class="form-label">
+                            Заметки
+                        </label>
+                        <textarea 
+                            id="task-notes" 
+                            name="notes" 
+                            class="form-textarea"
+                            placeholder="Мои мысли и подходы к решению..."
+                            rows="5"
+                            aria-describedby="task-notes-hint"></textarea>
+                        <small id="task-notes-hint" class="form-hint">
+                            Запишите свои наблюдения о задаче
+                        </small>
+                    </div>
+
+                    <!-- Кнопки формы -->
+                    <div class="form-actions">
+                        <button 
+                            type="submit" 
+                            class="btn btn-primary" 
+                            id="submit-task-btn">
+                            Сохранить задачу
+                        </button>
+                        <button 
+                            type="button" 
+                            class="btn btn-secondary" 
+                            id="cancel-task-btn"
+                            data-screen="home">
+                            Отменить
+                        </button>
+                    </div>
+
+                    <!-- Сообщение об успехе -->
+                    <div id="form-success" class="form-success" role="status" aria-live="polite"></div>
+                </form>
+            </section>
+
+            <!-- Экран 3: Повторение задачи -->
+            <section id="review-screen" class="screen" aria-labelledby="review-title">
+                <header class="screen-header">
+                    <h2 id="review-title" class="screen-title">Повторение задачи</h2>
+                </header>
+
+                <article id="review-card" class="review-card">
+                    <!-- Содержимое карточки будет заполнено через JavaScript -->
+                    <div class="review-empty">
+                        <p>Выберите задачу для повторения</p>
+                    </div>
+                </article>
+
+                <div id="review-actions" class="review-actions" style="display: none;">
+                    <p class="review-prompt">Насколько хорошо вы помните решение?</p>
+                    
+                    <div class="review-buttons" role="group" aria-label="Оценка повторения">
+                        <button 
+                            type="button" 
+                            class="btn btn-review btn-forgot" 
+                            data-status="forgot"
+                            aria-label="Не помню решение">
+                            <span class="btn-icon" aria-hidden="true">❌</span>
+                            <span class="btn-text">Don't Remember</span>
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            class="btn btn-review btn-partial" 
+                            data-status="partial"
+                            aria-label="Частично помню решение">
+                            <span class="btn-icon" aria-hidden="true">⚠️</span>
+                            <span class="btn-text">Partially Remember</span>
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            class="btn btn-review btn-remember" 
+                            data-status="remember"
+                            aria-label="Хорошо помню решение">
+                            <span class="btn-icon" aria-hidden="true">✅</span>
+                            <span class="btn-text">Remember Well</span>
+                        </button>
+                    </div>
+
+                    <div id="review-feedback" class="review-feedback" role="status" aria-live="polite"></div>
+                </div>
+
+                <div class="screen-actions">
+                    <button 
+                        type="button" 
+                        class="btn btn-secondary" 
+                        data-screen="home">
+                        Вернуться к списку
+                    </button>
+                </div>
+            </section>
+
+            <!-- Экран 4: Статистика (заглушка) -->
+            <section id="stats-screen" class="screen" aria-labelledby="stats-title">
+                <header class="screen-header">
+                    <h2 id="stats-title" class="screen-title">Статистика</h2>
+                </header>
+                
+                <div class="placeholder-content">
+                    <p class="placeholder-icon" aria-hidden="true">📊</p>
+                    <p class="placeholder-text">В разработке</p>
+                    <p class="placeholder-description">
+                        Здесь будет отображаться статистика ваших повторений, прогресс и аналитика
+                    </p>
+                </div>
+            </section>
+
+            <!-- Экран 5: Настройки (заглушка) -->
+            <section id="settings-screen" class="screen" aria-labelledby="settings-title">
+                <header class="screen-header">
+                    <h2 id="settings-title" class="screen-title">Настройки</h2>
+                </header>
+                
+                <div class="placeholder-content">
+                    <p class="placeholder-icon" aria-hidden="true">⚙️</p>
+                    <p class="placeholder-text">В разработке</p>
+                    <p class="placeholder-description">
+                        Здесь вы сможете настроить интервалы повторений, темы оформления и другие параметры
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Подвал приложения -->
+    <footer class="app-footer">
+        <p>&copy; 2025 LeetCode Tracker. Создано для эффективного изучения алгоритмов.</p>
+    </footer>
+
+    <!-- Подключение JavaScript модулей -->
+    <script src="js/utils/storage.js"></script>
+    <script src="js/utils/validation.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/ui.js"></script>
+    <script src="js/utils/crypto.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

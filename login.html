@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LeetCode Tracker — авторизация">
+    <title>Вход в LeetCode Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-body">
+    <!-- Контейнер авторизации -->
+    <div class="auth-container">
+        <!-- Логотип и заголовок -->
+        <header class="auth-header">
+            <div class="auth-logo" aria-hidden="true">🎯</div>
+            <h1 class="auth-title">LeetCode Tracker</h1>
+            <p class="auth-subtitle">Система интервального повторения задач</p>
+        </header>
+
+        <!-- Переключатель между формами -->
+        <div class="auth-tabs" role="tablist" aria-label="Выбор формы">
+            <button 
+                type="button" 
+                class="auth-tab active" 
+                id="login-tab"
+                role="tab"
+                aria-selected="true"
+                aria-controls="login-panel">
+                Вход
+            </button>
+            <button 
+                type="button" 
+                class="auth-tab" 
+                id="register-tab"
+                role="tab"
+                aria-selected="false"
+                aria-controls="register-panel">
+                Регистрация
+            </button>
+        </div>
+
+        <!-- Форма входа -->
+        <div 
+            class="auth-panel active" 
+            id="login-panel"
+            role="tabpanel"
+            aria-labelledby="login-tab">
+            
+            <form id="login-form" class="auth-form" novalidate>
+                <h2 class="form-heading">Войти в аккаунт</h2>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="login-email" class="form-label">
+                        Email
+                        <span class="form-required" aria-label="обязательное поле">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon" aria-hidden="true">📧</span>
+                        <input 
+                            type="email" 
+                            id="login-email" 
+                            name="email" 
+                            class="form-input"
+                            placeholder="your.email@example.com"
+                            aria-describedby="login-email-error"
+                            autocomplete="email"
+                            required>
+                    </div>
+                    <span id="login-email-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+
+                <!-- Пароль -->
+                <div class="form-group">
+                    <label for="login-password" class="form-label">
+                        Пароль
+                        <span class="form-required" aria-label="обязательное поле">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon" aria-hidden="true">🔒</span>
+                        <input 
+                            type="password" 
+                            id="login-password" 
+                            name="password" 
+                            class="form-input"
+                            placeholder="Введите пароль"
+                            aria-describedby="login-password-error"
+                            autocomplete="current-password"
+                            required
+                            minlength="8">
+                        <button 
+                            type="button" 
+                            class="toggle-password" 
+                            aria-label="Показать пароль"
+                            data-target="login-password">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <span id="login-password-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+
+                <!-- Запомнить меня -->
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input 
+                            type="checkbox" 
+                            id="remember-me" 
+                            name="remember"
+                            class="form-checkbox">
+                        <span class="checkbox-text">Запомнить меня</span>
+                    </label>
+                </div>
+
+                <!-- Кнопка входа -->
+                <button type="submit" class="btn btn-primary btn-block">
+                    Войти
+                </button>
+
+                <!-- Дополнительные ссылки -->
+                <div class="auth-links">
+                    <a href="#" class="auth-link" id="forgot-password-link">Забыли пароль?</a>
+                </div>
+
+                <!-- Сообщения -->
+                <div id="login-message" class="auth-message" role="status" aria-live="polite"></div>
+            </form>
+        </div>
+
+        <!-- Форма регистрации -->
+        <div 
+            class="auth-panel" 
+            id="register-panel"
+            role="tabpanel"
+            aria-labelledby="register-tab"
+            hidden>
+            
+            <form id="register-form" class="auth-form" novalidate>
+                <h2 class="form-heading">Создать аккаунт</h2>
+
+                <!-- Имя -->
+                <div class="form-group">
+                    <label for="register-name" class="form-label">
+                        Имя
+                        <span class="form-required" aria-label="обязательное поле">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon" aria-hidden="true">👤</span>
+                        <input 
+                            type="text" 
+                            id="register-name" 
+                            name="name" 
+                            class="form-input"
+                            placeholder="Ваше имя"
+                            aria-describedby="register-name-error"
+                            autocomplete="name"
+                            required
+                            minlength="2"
+                            maxlength="50">
+                    </div>
+                    <span id="register-name-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="register-email" class="form-label">
+                        Email
+                        <span class="form-required" aria-label="обязательное поле">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon" aria-hidden="true">📧</span>
+                        <input 
+                            type="email" 
+                            id="register-email" 
+                            name="email" 
+                            class="form-input"
+                            placeholder="your.email@example.com"
+                            aria-describedby="register-email-error"
+                            autocomplete="email"
+                            required>
+                    </div>
+                    <span id="register-email-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+
+                <!-- Пароль -->
+                <div class="form-group">
+                    <label for="register-password" class="form-label">
+                        Пароль
+                        <span class="form-required" aria-label="обязательное поле">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon" aria-hidden="true">🔒</span>
+                        <input 
+                            type="password" 
+                            id="register-password" 
+                            name="password" 
+                            class="form-input"
+                            placeholder="Минимум 8 символов"
+                            aria-describedby="register-password-error register-password-hint"
+                            autocomplete="new-password"
+                            required
+                            minlength="8">
+                        <button 
+                            type="button" 
+                            class="toggle-password" 
+                            aria-label="Показать пароль"
+                            data-target="register-password">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <small id="register-password-hint" class="form-hint">
+                        Минимум 8 символов, включая буквы и цифры
+                    </small>
+                    <span id="register-password-error" class="form-error" role="alert" aria-live="polite"></span>
+                    
+                    <!-- Индикатор силы пароля -->
+                    <div class="password-strength" id="password-strength" aria-live="polite">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strength-fill"></div>
+                        </div>
+                        <span class="strength-text" id="strength-text"></span>
+                    </div>
+                </div>
+
+                <!-- Подтверждение пароля -->
+                <div class="form-group">
+                    <label for="register-password-confirm" class="form-label">
+                        Подтвердите пароль
+                        <span class="form-required" aria-label="обязательное поле">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon" aria-hidden="true">🔒</span>
+                        <input 
+                            type="password" 
+                            id="register-password-confirm" 
+                            name="passwordConfirm" 
+                            class="form-input"
+                            placeholder="Повторите пароль"
+                            aria-describedby="register-password-confirm-error"
+                            autocomplete="new-password"
+                            required
+                            minlength="8">
+                        <button 
+                            type="button" 
+                            class="toggle-password" 
+                            aria-label="Показать пароль"
+                            data-target="register-password-confirm">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <span id="register-password-confirm-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+
+                <!-- Согласие с условиями -->
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input 
+                            type="checkbox" 
+                            id="accept-terms" 
+                            name="terms"
+                            class="form-checkbox"
+                            required>
+                        <span class="checkbox-text">
+                            Я принимаю <a href="#" class="auth-link">условия использования</a> 
+                            и <a href="#" class="auth-link">политику конфиденциальности</a>
+                        </span>
+                    </label>
+                    <span id="accept-terms-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+
+                <!-- Кнопка регистрации -->
+                <button type="submit" class="btn btn-primary btn-block">
+                    Зарегистрироваться
+                </button>
+
+                <!-- Сообщения -->
+                <div id="register-message" class="auth-message" role="status" aria-live="polite"></div>
+            </form>
+        </div>
+
+        <!-- Подвал -->
+        <footer class="auth-footer">
+            <p>&copy; 2025 LeetCode Tracker. Все данные хранятся локально в вашем браузере.</p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно восстановления пароля -->
+    <div class="modal" id="forgot-password-modal" role="dialog" aria-labelledby="forgot-password-title" aria-modal="true" hidden>
+        <div class="modal-overlay" aria-hidden="true"></div>
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2 id="forgot-password-title" class="modal-title">Восстановление пароля</h2>
+                <button type="button" class="modal-close" aria-label="Закрыть">✕</button>
+            </header>
+            
+            <form id="forgot-password-form" class="modal-body">
+                <p class="modal-description">
+                    Введите ваш email, и мы отправим инструкции по восстановлению пароля.
+                </p>
+                
+                <div class="form-group">
+                    <label for="forgot-email" class="form-label">
+                        Email
+                        <span class="form-required">*</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="forgot-email" 
+                        name="email" 
+                        class="form-input"
+                        placeholder="your.email@example.com"
+                        required>
+                    <span id="forgot-email-error" class="form-error" role="alert" aria-live="polite"></span>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                    <button type="button" class="btn btn-secondary modal-cancel">Отмена</button>
+                </div>
+                
+                <div id="forgot-message" class="auth-message" role="status" aria-live="polite"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Подключение JavaScript модулей -->
+    <script src="js/utils/storage.js"></script>
+    <script src="js/utils/validation.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/ui.js"></script>
+    <script src="js/utils/crypto.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
