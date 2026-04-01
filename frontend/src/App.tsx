@@ -131,9 +131,8 @@ export default function App() {
   const reviewTask = reviewTaskId ? getTaskById(reviewTaskId) : null;
 
   return (
-    <div className="app-wrapper">
+    <>
       <AppHeader userName={currentUser.name} onLogout={handleLogout} />
-      <AppNav currentScreen={currentScreen} onNavigate={handleNavigate} />
 
       {notification && (
         <div
@@ -156,7 +155,10 @@ export default function App() {
         </div>
       )}
 
-      <main className="app-main" id="main-content" role="main">
+      <div className="app-container">
+        <AppNav currentScreen={currentScreen} onNavigate={handleNavigate} />
+
+        <main className="app-main" id="main-content" role="main">
         {currentScreen === 'home' && (
           <HomePage
             todayTasks={todayTasks}
@@ -186,8 +188,9 @@ export default function App() {
         {currentScreen === 'stats' && <StatsPage />}
         {currentScreen === 'settings' && <SettingsPage />}
       </main>
+      </div>
 
       <AppFooter />
-    </div>
+    </>
   );
 }
