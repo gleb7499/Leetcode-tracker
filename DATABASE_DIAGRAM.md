@@ -8,11 +8,13 @@
 - USER_TASKS хранит оперативный срез (текущее состояние и ближайшую дату повторения).
 - Связь между задачами и темами реализована как many-to-many через TASK_TOPICS.
 - Пользовательские таблицы из старого вида `<user_id>_*` нормализованы в общие таблицы с полем `user_id`.
+- Конечный пользователь работает только со своими задачами, а общий жизненный цикл TASKS управляется сервером прозрачно.
 
 Критичные ограничения целостности:
 
 - UNIQUE(user_id, task_id) в USER_TASKS.
 - UNIQUE(task_id, topic_id) в TASK_TOPICS.
+- UNIQUE(identity_key) в TASKS.
 - ON DELETE CASCADE: USERS -> USER_TASKS, TASKS -> USER_TASKS, USER_TASKS -> USER_REVIEWS, TASKS -> TASK_TOPICS, TOPICS -> TASK_TOPICS.
 - Уникальность справочников: TOPICS.name, DIFFICULTY.level, STATES.code.
 
@@ -54,6 +56,7 @@ erDiagram
 
     TASKS {
         bigint id PK
+        varchar identity_key UK
         varchar source_type
         varchar source_problem_id
         varchar title
@@ -162,9 +165,9 @@ erDiagram
 
 #### TASKS
 
-Что хранит: общую карточку задачи, не привязанную к конкретному пользователю.
+Что хранит: общую карточку задачи, не привязанную к конкретному пользователю, включая внутренний ключ идентичности для дедупликации.
 
-Пример данных: id = 101, source_type = leetcode, source_problem_id = 1, title = Two Sum, difficulty_id = 1.
+Пример данных: id = 101, identity_key = lc:1, source_type = leetcode, source_problem_id = 1, title = Two Sum, difficulty_id = 1.
 
 #### TASK_TOPICS
 
@@ -185,3 +188,20 @@ erDiagram
 Что хранит: полную историю всех повторений пользователя по задаче; используется как источник истины для аналитики и динамики обучения.
 
 Пример данных: id = 70001, user_task_id = 3001, state_id = 3, reviewed_at = 2026-04-01 08:40:00, interval_days = 7, next_review_date = 2026-04-08.
+
+## Жизненный цикл задачи в TASKS
+
+### При добавлении задачи в кабинет пользователя
+
+- Backend вычисляет внутренний `identity_key` по данным входной задачи.
+- Если задача с таким ключом уже есть в TASKS, сервер не создаёт дубль и создаёт только связь в USER_TASKS.
+- Если задачи нет, сервер создаёт запись в TASKS, после этого создаёт связь в USER_TASKS.
+- Для пользователя это единый сценарий: задача добавлена.
+
+### При удалении задачи из кабинета пользователя
+
+- Backend удаляет связь пользователя в USER_TASKS.
+- Затем backend проверяет, остались ли другие ссылки на этот `task_id` в USER_TASKS.
+- Если ссылки остались, TASKS сохраняется.
+- Если ссылок больше нет, backend удаляет orphan-запись из TASKS и связанные TASK_TOPICS.
+- Для пользователя это единый сценарий: задача удалена из его списка.
