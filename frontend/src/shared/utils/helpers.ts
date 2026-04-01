@@ -1,6 +1,8 @@
 export function generateId(prefix = 'id'): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
+  const array = new Uint32Array(2);
+  window.crypto.getRandomValues(array);
+  const random = Array.from(array, (n) => n.toString(36)).join('');
   return `${prefix}-${timestamp}-${random}`;
 }
 
