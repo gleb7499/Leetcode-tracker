@@ -2,16 +2,16 @@
 
 Система интервального повторения задач из LeetCode — полноценное веб-приложение для эффективного изучения алгоритмов.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
 
 ---
 
 ## 📋 Описание
 
-**LeetCode Tracker** — это прототип фронтенд-приложения для отслеживания решённых задач и организации интервальных повторений. Приложение помогает закреплять знания алгоритмов по методике spaced repetition.
+**LeetCode Tracker** — приложение для отслеживания решённых задач и организации интервальных повторений. Помогает закреплять знания алгоритмов по методике spaced repetition.
 
 ### ✨ Основные возможности
 
@@ -26,46 +26,52 @@
 
 ---
 
-## 🚀 Быстрый старт
+## 🏗️ Монорепо структура
 
-### Запуск приложения
+```
+├── frontend/           # React + Vite + TypeScript (основной фронтенд)
+├── backend/            # Будущий бэкенд (placeholder)
+├── index.html          # Legacy HTML (оригинал для справки)
+├── css/                # Legacy CSS (оригинал для справки)
+├── js/                 # Legacy JS (оригинал для справки)
+└── README.md           # Этот файл
+```
 
-1. Скачайте или клонируйте репозиторий
-2. Откройте файл `index.html` в любом современном браузере
-3. Готово! Приложение работает полностью автономно
+## 🚀 Быстрый старт (фронтенд)
 
 ```bash
-# Если у вас установлен Live Server для VS Code:
-# Щёлкните правой кнопкой по index.html → Open with Live Server
+cd frontend
+npm install
+npm run dev    # dev-сервер на http://localhost:5173
+npm run build  # production-сборка
 ```
 
-### Структура проекта
+### Структура фронтенда
 
 ```
-├── index.html          # Основной HTML-файл
-├── css/
-│   └── style.css       # Все стили приложения
-├── js/
-│   └── app.js          # Вся логика приложения
-└── README.md           # Этот файл
+frontend/src/
+├── components/         # Переиспользуемые компоненты (Header, Nav, Footer, TaskCard, ...)
+├── pages/              # Экраны приложения (Home, AddTask, Review, Stats, Settings)
+├── features/auth/      # Страница авторизации (Login, Register, PasswordStrength)
+├── shared/
+│   ├── types/          # TypeScript типы (Task, User, Session, ...)
+│   ├── utils/          # Утилиты (storage, helpers, crypto)
+│   ├── hooks/          # React хуки (useAuth, useTasks)
+│   └── validation/     # Zod схемы валидации
+└── styles/             # Глобальные стили (global.css, auth.css)
 ```
 
 ---
 
 ## 🎨 Технологии
 
-Проект реализован **полностью на ванильном стеке**:
-
-- **HTML5** — семантическая разметка с поддержкой ARIA
-- **CSS3** — адаптивная вёрстка (Flexbox, Grid), CSS-переменные
-- **JavaScript ES6+** — модульный чистый код без фреймворков
-
-### Без использования:
-
-❌ React / Vue / Angular  
-❌ Bootstrap / Tailwind  
-❌ jQuery  
-❌ Бэкенда или базы данных
+- **React 18** — UI фреймворк, функциональные компоненты + хуки
+- **TypeScript 5** — строгая типизация
+- **Vite 6** — сборщик и dev-сервер
+- **React Router 7** — роутинг (`/` → App, `/login` → Auth)
+- **Zod** — валидация форм
+- **Web Crypto API** — SHA-256 хеширование паролей
+- **localStorage** — хранение данных без бэкенда
 
 ---
 
