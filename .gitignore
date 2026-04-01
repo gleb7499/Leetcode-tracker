@@ -1,42 +1,218 @@
-# Игнорировать системные файлы
+# Root .gitignore — unified for monorepo
+# Contains rules for: Frontend (PWA), Backend (Kotlin/Spring), Android (TWA)
+
+########################################
+# OS / Editor
+########################################
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
 Thumbs.db
 desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
 
-# Игнорировать файлы IDE
-.vscode/
-.idea/
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Vim/Emacs
 *.swp
 *.swo
 *~
+\#*\#
+.#*
 
-# Игнорировать логи
-*.log
+########################################
+# IDE / Tooling
+########################################
+# JetBrains IDEs (IntelliJ IDEA, WebStorm, Android Studio)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+########################################
+# Node / JavaScript / PWA (Frontend)
+########################################
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
 
-# Игнорировать временные файлы
+# Environment variables (may contain secrets!)
+.env
+.env.*
+!.env.*.example
+
+# Build outputs
+dist/
+.cache/
+.parcel-cache/
+
+# Service Worker cache (if generated)
+workbox-*.js
+
+########################################
+# Kotlin / Gradle / Spring Boot (Backend)
+########################################
+# Gradle
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Gradle Kotlin DSL
+.kotlin/
+
+# Spring Boot
+*.log
+*.gz
+spring-shell.log
+
+# Test / coverage reports (generated, not part of source)
+backend/htmlReport/
+
+# Maven (if used)
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+########################################
+# Android / TWA / Gradle
+########################################
+# Local configuration files
+local.properties
+
+# Gradle build folders (already covered above, but being explicit)
+android/.gradle/
+android/**/build/
+android/app/build/
+
+# Generated APKs, AABs, and signatures
+*.apk
+*.apks
+*.aab
+*.ap_
+*.idsig
+app-release-*.apk
+app-release-*.aab
+
+# Android Studio captures and native build
+captures/
+.externalNativeBuild/
+.cxx/
+
+# NDK
+obj/
+
+# Manifest checksum (generated)
+manifest-checksum.txt
+
+########################################
+# SECURITY: Signing Keys & Secrets
+########################################
+# NEVER commit keystores, signing keys, or credentials!
+android.keystore
+*.keystore
+*.jks
+key.properties
+**/android.keystore
+**/*.keystore
+**/*.jks
+**/key.properties
+
+# Google Services (if using Firebase, etc.)
+google-services.json
+GoogleService-Info.plist
+
+########################################
+# Python (if any scripts)
+########################################
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+########################################
+# Temporary & System Files
+########################################
+# Temporary files
+tmp/
 *.tmp
 *.temp
-.cache/
-
-# Node modules (если в будущем добавите)
-node_modules/
-package-lock.json
-yarn.lock
-
-# Игнорировать бандлы и минифицированные файлы
-dist/
-build/
-*.min.js
-*.min.css
-
-# Игнорировать резервные копии
 *.bak
-*.backup
-*_backup.*
+*.cache
 
-# Игнорировать пользовательские данные (если нужно)
-# Раскомментируйте, если не хотите сохранять локальные данные
-# localStorage.json
+# Office documents (generated exports, e.g. from Markdown)
+*.docx
+*.xlsx
+*.pptx
+
+# Logs
+*.log
+*.pid
+backend/logs/*
+
+# OS-specific
+.Spotlight-V100
+.Trashes
+
+########################################
+# CI/CD & Deployment
+########################################
+# CI artifacts (optional — uncomment if needed)
+# .github/workflows/*.retry
+
+# Deployment files (optional)
+# .netlify/
+
+########################################
+# KEEP COMMITTED (do NOT ignore)
+########################################
+# Lock files — SHOULD be committed for reproducible builds
+# package-lock.json
+# yarn.lock
+# gradle/wrapper/gradle-wrapper.jar
+*.bkp
