@@ -158,7 +158,7 @@ erDiagram
 
 Что хранит: учётные записи пользователей системы.
 
-Пример данных: id = 12, email = anna.dev@example.com, name = Anna, created_at = 2026-04-01 10:00:00.
+Пример данных: id = 12, email = <anna.dev@example.com>, name = Anna, created_at = 2026-04-01 10:00:00.
 
 #### TASKS
 
