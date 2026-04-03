@@ -1,5 +1,3 @@
-"use client"
-
 import { cn } from "@/lib/utils"
 
 interface ProgressRingProps {
@@ -15,21 +13,21 @@ export function ProgressRing({ progress, total, size = 160, className }: Progres
   const radius = (size - strokeWidth * 2) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (percentage / 100) * circumference
+  const wrapperSize = size + 32
 
   return (
-    <div 
-      className={cn("relative glass rounded-full p-4", className)} 
-      style={{ width: size + 32, height: size + 32 }}
+    <div
+      className={cn("relative glass rounded-full p-4 progress-ring-wrapper", className)}
+      style={{ "--ring-size": `${wrapperSize}px` } as React.CSSProperties}
     >
       {/* Inner glow */}
-      <div 
-        className="absolute inset-4 rounded-full bg-primary/5 blur-xl animate-pulse-soft"
-      />
-      
+      <div className="absolute inset-4 rounded-full bg-primary/5 blur-xl animate-pulse-soft" />
+
       <svg
         width={size}
         height={size}
         className="transform -rotate-90 relative z-10"
+        aria-hidden="true"
       >
         {/* Background circle */}
         <circle
@@ -41,7 +39,6 @@ export function ProgressRing({ progress, total, size = 160, className }: Progres
           strokeWidth={strokeWidth}
           className="text-foreground/10"
         />
-        
         {/* Progress circle */}
         <circle
           cx={size / 2}
@@ -59,12 +56,8 @@ export function ProgressRing({ progress, total, size = 160, className }: Progres
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-        <span className="text-5xl font-light text-foreground tracking-tight">
-          {progress}
-        </span>
-        <span className="text-sm text-muted-foreground mt-1">
-          of {total} today
-        </span>
+        <span className="text-5xl font-light text-foreground tracking-tight">{progress}</span>
+        <span className="text-sm text-muted-foreground mt-1">of {total} today</span>
       </div>
     </div>
   )
