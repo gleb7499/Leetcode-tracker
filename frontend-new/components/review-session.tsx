@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { ExternalLink, Check, Minus, X } from "lucide-react"
 import { REVIEW_FEEDBACK_OPTIONS, type ReviewFeedback } from "@/lib/review-feedback"
-import { MOCK_REVIEW_TASKS, type Difficulty } from "@/data/review-tasks"
+import type { Task } from "@/src/shared/types"
 import { cn } from "@/lib/utils"
+
+type Difficulty = Task["difficulty"]
 
 const CARD_EXIT_MS = 320
 const SESSION_END_MS = 400
@@ -32,13 +34,15 @@ const feedbackButtonStyles: Record<ReviewFeedback, string> = {
 const REVIEW_LAYOUT_MAX_WIDTH = "max-w-[960px]"
 
 interface ReviewSessionProps {
-  onReviewFeedback: (feedback: ReviewFeedback) => void
+  tasks: Task[]
+  onReviewFeedback: (taskId: string, feedback: ReviewFeedback) => void
   onEnd: () => void
   currentProgress: number
   totalCards: number
 }
 
 export function ReviewSession({
+  tasks,
   onReviewFeedback,
   onEnd,
   currentProgress,
@@ -52,7 +56,7 @@ export function ReviewSession({
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const currentTask = MOCK_REVIEW_TASKS[currentIndex % MOCK_REVIEW_TASKS.length]
+  const currentTask = tasks[currentIndex]
   const normalizedProgress = Math.min(currentProgress, totalCards)
   const dailyProgressPercent = totalCards > 0 ? (normalizedProgress / totalCards) * 100 : 0
 
@@ -63,18 +67,17 @@ export function ReviewSession({
 
   const advanceToNextTask = useCallback(
     (feedback: ReviewFeedback) => {
-      if (isAdvancing) return
+      if (isAdvancing || !currentTask) return
 
-      const nextProgress = Math.min(currentProgress + 1, totalCards)
-      const willFinishDay = totalCards === 0 || nextProgress >= totalCards
+      const isLastTask = currentIndex + 1 >= tasks.length
 
       setIsAdvancing(true)
       setCardAnimation("exit")
 
       advanceTimerRef.current = setTimeout(() => {
-        onReviewFeedback(feedback)
+        onReviewFeedback(currentTask.id, feedback)
 
-        if (willFinishDay) {
+        if (isLastTask) {
           triggerEnd()
         } else {
           setCurrentIndex((prev) => prev + 1)
@@ -83,7 +86,7 @@ export function ReviewSession({
         }
       }, CARD_EXIT_MS)
     },
-    [currentProgress, isAdvancing, onReviewFeedback, totalCards, triggerEnd],
+    [currentIndex, currentTask, isAdvancing, onReviewFeedback, tasks.length, triggerEnd],
   )
 
   const handleExit = useCallback(() => {

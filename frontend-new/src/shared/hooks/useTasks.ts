@@ -1,0 +1,136 @@
+import { useState, useCallback } from 'react';
+import { storage } from '../utils/storage';
+import { generateId, parseStringToArray } from '../utils/helpers';
+import type { Task, ReviewStatus, Difficulty } from '../types';
+
+const STORAGE_KEY = 'leetcode-tracker-tasks';
+
+const REVIEW_INTERVALS: Record<ReviewStatus, number> = {
+  forgot: 1,
+  partial: 3,
+  remember: 7,
+};
+
+function initDemoData(): Task[] {
+  return [
+    {
+      id: generateId('task'),
+      name: 'Two Sum',
+      url: 'https://leetcode.com/problems/two-sum/',
+      difficulty: 'Easy',
+      topics: ['Array', 'Hash Table'],
+      notes: 'Классическая задача на HashMap. Проход за O(n).',
+      createdAt: new Date().toISOString(),
+      nextReview: new Date().toISOString(),
+      reviews: [],
+    },
+    {
+      id: generateId('task'),
+      name: 'Add Two Numbers',
+      url: 'https://leetcode.com/problems/add-two-numbers/',
+      difficulty: 'Medium',
+      topics: ['Linked List', 'Math', 'Recursion'],
+      notes: 'Сложение чисел в обратном порядке через списки.',
+      createdAt: new Date().toISOString(),
+      nextReview: new Date().toISOString(),
+      reviews: [],
+    },
+    {
+      id: generateId('task'),
+      name: 'Median of Two Sorted Arrays',
+      url: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
+      difficulty: 'Hard',
+      topics: ['Array', 'Binary Search', 'Divide and Conquer'],
+      notes: 'Бинарный поиск по меньшему массиву. Сложная задача!',
+      createdAt: new Date().toISOString(),
+      nextReview: new Date().toISOString(),
+      reviews: [],
+    },
+  ];
+}
+
+function calculateNextReview(status: ReviewStatus): string {
+  const days = REVIEW_INTERVALS[status] ?? 1;
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString();
+}
+
+export function useTasks() {
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    return storage.get<Task[]>(STORAGE_KEY) ?? initDemoData();
+  });
+
+  const saveTasks = useCallback((updated: Task[]) => {
+    storage.set(STORAGE_KEY, updated);
+    setTasks(updated);
+  }, []);
+
+  const getTasksForToday = useCallback((): Task[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return tasks.filter((task) => {
+      const next = new Date(task.nextReview);
+      next.setHours(0, 0, 0, 0);
+      return next <= today;
+    });
+  }, [tasks]);
+
+  const addTask = useCallback(
+    (data: {
+      name: string;
+      url: string;
+      difficulty: Difficulty;
+      topics: string;
+      notes: string;
+    }) => {
+      const task: Task = {
+        id: generateId('task'),
+        name: data.name.trim(),
+        url: data.url.trim(),
+        difficulty: data.difficulty,
+        topics: parseStringToArray(data.topics),
+        notes: data.notes.trim(),
+        createdAt: new Date().toISOString(),
+        nextReview: new Date().toISOString(),
+        reviews: [],
+      };
+      const updated = [...tasks, task];
+      saveTasks(updated);
+      return task;
+    },
+    [tasks, saveTasks],
+  );
+
+  const deleteTask = useCallback(
+    (taskId: string) => {
+      const updated = tasks.filter((t) => t.id !== taskId);
+      saveTasks(updated);
+    },
+    [tasks, saveTasks],
+  );
+
+  const recordReview = useCallback(
+    (taskId: string, status: ReviewStatus) => {
+      const updated = tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        return {
+          ...t,
+          reviews: [...t.reviews, { date: new Date().toISOString(), status }],
+          nextReview: calculateNextReview(status),
+        };
+      });
+      saveTasks(updated);
+    },
+    [tasks, saveTasks],
+  );
+
+  const getTaskById = useCallback(
+    (taskId: string): Task | undefined => {
+      return tasks.find((t) => t.id === taskId);
+    },
+    [tasks],
+  );
+
+  return { tasks, getTasksForToday, addTask, deleteTask, recordReview, getTaskById };
+}

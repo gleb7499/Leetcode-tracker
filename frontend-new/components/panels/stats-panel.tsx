@@ -1,20 +1,55 @@
 import { Flame, Target, TrendingUp, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Task } from "@/src/shared/types"
 
 interface StatsPanelProps {
   className?: string
+  tasks?: Task[]
 }
 
-const MOCK_STATS = {
-  currentStreak: 7,
-  totalMastered: 47,
-  accuracyRate: 82,
-  thisWeek: [3, 5, 4, 6, 2, 0, 0],
-  weekDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-} as const
+function computeStats(tasks: Task[]) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-export function StatsPanel({ className }: StatsPanelProps) {
-  const stats = MOCK_STATS
+  // Mastered = tasks with at least one review with status "remember"
+  const totalMastered = tasks.filter((t) =>
+    t.reviews.some((r) => r.status === "remember"),
+  ).length
+
+  // Total reviews
+  const allReviews = tasks.flatMap((t) => t.reviews)
+  const totalReviews = allReviews.length
+  const rememberCount = allReviews.filter((r) => r.status === "remember").length
+  const accuracyRate = totalReviews > 0 ? Math.round((rememberCount / totalReviews) * 100) : 0
+
+  // Weekly activity: count reviews per day for last 7 days
+  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const thisWeek = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (6 - i))
+    const dayKey = d.toISOString().slice(0, 10)
+    return allReviews.filter((r) => r.date.slice(0, 10) === dayKey).length
+  })
+
+  // Streak: count consecutive days with at least one review ending today
+  let currentStreak = 0
+  const checkDay = new Date(today)
+  for (let i = 0; i < 365; i++) {
+    const dayKey = checkDay.toISOString().slice(0, 10)
+    const hasReview = allReviews.some((r) => r.date.slice(0, 10) === dayKey)
+    if (hasReview) {
+      currentStreak++
+      checkDay.setDate(checkDay.getDate() - 1)
+    } else {
+      break
+    }
+  }
+
+  return { currentStreak, totalMastered, accuracyRate, thisWeek, weekDays }
+}
+
+export function StatsPanel({ className, tasks = [] }: StatsPanelProps) {
+  const stats = computeStats(tasks)
   const maxWeek = Math.max(...stats.thisWeek, 1)
 
   return (

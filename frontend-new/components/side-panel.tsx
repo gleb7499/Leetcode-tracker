@@ -4,12 +4,15 @@ import { StatsPanel } from "./panels/stats-panel"
 import { LibraryPanel } from "./panels/library-panel"
 import { SettingsPanel } from "./panels/settings-panel"
 import type { PanelType } from "./profile-menu"
+import type { Task } from "@/src/shared/types"
 
 interface SidePanelProps {
   activePanel: PanelType
   onClose: () => void
   mode?: "overlay" | "docked"
   className?: string
+  tasks?: Task[]
+  onLogout?: () => void
 }
 
 type AnimPhase = "hidden" | "entering" | "exiting"
@@ -46,6 +49,8 @@ export function SidePanel({
   activePanel,
   mode = "overlay",
   className,
+  tasks,
+  onLogout,
 }: SidePanelProps) {
   const [anim, dispatch] = useReducer(animReducer, INITIAL_ANIM_STATE)
 
@@ -68,9 +73,9 @@ export function SidePanel({
         mode === "overlay" ? "pt-24 pb-6" : "pt-6 pb-6",
       )}
     >
-      {anim.renderedPanel === "stats" && <StatsPanel />}
-      {anim.renderedPanel === "library" && <LibraryPanel />}
-      {anim.renderedPanel === "settings" && <SettingsPanel />}
+      {anim.renderedPanel === "stats" && <StatsPanel tasks={tasks} />}
+      {anim.renderedPanel === "library" && <LibraryPanel tasks={tasks} />}
+      {anim.renderedPanel === "settings" && <SettingsPanel onLogout={onLogout} />}
     </div>
   )
 
