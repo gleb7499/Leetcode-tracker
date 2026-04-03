@@ -1,10 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { ReviewSession } from "@/components/review-session"
 import { HomeView } from "@/components/home-view"
 import { ProfileMenu, type PanelType } from "@/components/profile-menu"
 import { SidePanel } from "@/components/side-panel"
 import { useDailyProgress } from "@/hooks/use-daily-progress"
+import { useAuth } from "@/src/shared/hooks/useAuth"
+import { useTasks } from "@/src/shared/hooks/useTasks"
+import type { Task } from "@/src/shared/types"
 import { type ReviewFeedback } from "@/lib/review-feedback"
+import type { ReviewStatus } from "@/src/shared/types"
 import { cn } from "@/lib/utils"
 
 type ViewState = "home" | "review" | "transitioning"
@@ -12,12 +17,25 @@ type ViewState = "home" | "review" | "transitioning"
 const TRANSITION_DURATION_MS = 400
 
 export default function App() {
+  const navigate = useNavigate()
+  const { currentUser, logout } = useAuth()
+  const { tasks, getTasksForToday, recordReview } = useTasks()
+
   const [view, setView] = useState<ViewState>("home")
   const [activePanel, setActivePanel] = useState<PanelType>(null)
   const [isSplitDesktop, setIsSplitDesktop] = useState(false)
+  const [sessionTasks, setSessionTasks] = useState<Task[]>([])
 
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/login", { replace: true })
+    }
+  }, [currentUser, navigate])
+
+  const todayTasks = getTasksForToday()
   const isReviewView = view === "review"
   const isPanelOpen = !isReviewView && activePanel !== null
   const isDesktopPanelOpen = isPanelOpen && isSplitDesktop
@@ -27,7 +45,7 @@ export default function App() {
     todayTotal,
     todayRemaining,
     incrementCompleted,
-  } = useDailyProgress(12)
+  } = useDailyProgress(todayTasks.length)
 
   const scheduleTransition = useCallback((nextView: ViewState) => {
     if (transitionTimerRef.current) {
@@ -42,14 +60,20 @@ export default function App() {
     if (todayRemaining <= 0) {
       return
     }
+    const fresh = getTasksForToday()
+    setSessionTasks(fresh)
     setActivePanel(null)
     setView("transitioning")
     scheduleTransition("review")
-  }, [todayRemaining, scheduleTransition])
+  }, [todayRemaining, getTasksForToday, scheduleTransition])
 
-  const handleReviewFeedback = useCallback((_: ReviewFeedback) => {
-    incrementCompleted()
-  }, [incrementCompleted])
+  const handleReviewFeedback = useCallback(
+    (taskId: string, feedback: ReviewFeedback) => {
+      recordReview(taskId, feedback as ReviewStatus)
+      incrementCompleted()
+    },
+    [recordReview, incrementCompleted],
+  )
 
   const handleEndSession = useCallback(() => {
     setView("transitioning")
@@ -59,6 +83,11 @@ export default function App() {
   const handlePanelChange = useCallback((panel: PanelType) => {
     setActivePanel(panel)
   }, [])
+
+  const handleLogout = useCallback(() => {
+    logout()
+    navigate("/login", { replace: true })
+  }, [logout, navigate])
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)")
@@ -78,6 +107,8 @@ export default function App() {
     }
   }, [])
 
+  if (!currentUser) return null
+
   return (
     <main className="min-h-screen relative overflow-hidden bg-background">
       {/* Ambient background – morphing glass orbs */}
@@ -92,12 +123,15 @@ export default function App() {
           activePanel={activePanel}
           onPanelChange={handlePanelChange}
           mode="floating"
+          userName={currentUser.name}
+          onLogout={handleLogout}
         />
       )}
 
       {/* Content */}
       {isReviewView ? (
         <ReviewSession
+          tasks={sessionTasks}
           onReviewFeedback={handleReviewFeedback}
           onEnd={handleEndSession}
           currentProgress={todayProgress}
@@ -127,6 +161,8 @@ export default function App() {
             activePanel={activePanel}
             onClose={() => setActivePanel(null)}
             mode={isSplitDesktop ? "docked" : "overlay"}
+            tasks={tasks}
+            onLogout={handleLogout}
           />
         </>
       )}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { User, BarChart3, BookOpen, Settings, X } from "lucide-react"
+import { User, BarChart3, BookOpen, Settings, X, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type PanelType = "stats" | "library" | "settings" | null
@@ -8,6 +8,8 @@ interface ProfileMenuProps {
   activePanel: PanelType
   onPanelChange: (panel: PanelType) => void
   mode?: "floating" | "rail"
+  userName?: string
+  onLogout?: () => void
 }
 
 const menuItems = [
@@ -27,6 +29,7 @@ export function ProfileMenu({
   activePanel,
   onPanelChange,
   mode = "floating",
+  onLogout,
 }: ProfileMenuProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
@@ -179,6 +182,28 @@ export function ProfileMenu({
             </span>
           </button>
         ))}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={cn(
+              "group relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
+              "glass-subtle hover:glass-profile",
+              isExpanded && cn("animate-menu-item-drop", menuDelayClass[3] ?? ""),
+            )}
+            aria-label="Sign out"
+          >
+            <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive transition-colors duration-300" />
+            <span
+              className={cn(
+                "absolute right-full mr-3 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap",
+                "glass-subtle text-foreground",
+                "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none",
+              )}
+            >
+              Sign out
+            </span>
+          </button>
+        )}
       </div>
     </div>
   )

@@ -5,9 +5,10 @@ import { cn } from "@/lib/utils"
 
 interface SettingsPanelProps {
   className?: string
+  onLogout?: () => void
 }
 
-export function SettingsPanel({ className }: SettingsPanelProps) {
+export function SettingsPanel({ className, onLogout }: SettingsPanelProps) {
   const [settings, setSettings] = useState({
     dailyGoal: 10,
     notifications: true,
@@ -97,6 +98,15 @@ export function SettingsPanel({ className }: SettingsPanelProps) {
           disabled
         />
       </div>
+
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          className="mt-2 w-full py-3 rounded-2xl glass-subtle text-destructive/80 hover:text-destructive hover:bg-destructive/10 font-medium text-sm transition-all duration-200"
+        >
+          Sign out
+        </button>
+      )}
     </div>
   )
 }

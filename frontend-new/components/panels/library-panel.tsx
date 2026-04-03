@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Search, ChevronRight, CheckCircle2, Clock, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Task } from "@/src/shared/types"
 
 type CardStatus = "mastered" | "learning" | "new"
 
@@ -18,41 +19,35 @@ interface Category {
 
 interface LibraryPanelProps {
   className?: string
+  tasks?: Task[]
 }
 
-const MOCK_CATEGORIES: readonly Category[] = [
-  {
-    name: "Arrays & Strings",
-    total: 15,
-    mastered: 8,
-    cards: [
-      { name: "Two Sum", status: "mastered" },
-      { name: "Binary Search", status: "mastered" },
-      { name: "Sliding Window", status: "learning" },
-      { name: "Two Pointers", status: "new" },
-    ],
-  },
-  {
-    name: "Trees & Graphs",
-    total: 12,
-    mastered: 3,
-    cards: [
-      { name: "BFS", status: "mastered" },
-      { name: "DFS", status: "learning" },
-      { name: "Dijkstra", status: "new" },
-    ],
-  },
-  {
-    name: "Dynamic Programming",
-    total: 10,
-    mastered: 2,
-    cards: [
-      { name: "Fibonacci", status: "mastered" },
-      { name: "Knapsack", status: "learning" },
-      { name: "LCS", status: "new" },
-    ],
-  },
-]
+function getCardStatus(task: Task): CardStatus {
+  if (task.reviews.length === 0) return "new"
+  const lastReview = task.reviews[task.reviews.length - 1]
+  if (lastReview.status === "remember") return "mastered"
+  return "learning"
+}
+
+function groupTasksIntoCategories(tasks: Task[]): Category[] {
+  if (tasks.length === 0) return []
+
+  // Group tasks by topic (use first topic as category, or "Other" if none)
+  const categoryMap = new Map<string, Task[]>()
+
+  for (const task of tasks) {
+    const category = task.topics[0] ?? "Other"
+    const existing = categoryMap.get(category) ?? []
+    existing.push(task)
+    categoryMap.set(category, existing)
+  }
+
+  return Array.from(categoryMap.entries()).map(([name, catTasks]) => {
+    const cards = catTasks.map((t) => ({ name: t.name, status: getCardStatus(t) }))
+    const mastered = cards.filter((c) => c.status === "mastered").length
+    return { name, total: catTasks.length, mastered, cards }
+  })
+}
 
 const statusConfig: Record<CardStatus, { icon: React.ElementType; color: string; bg: string }> = {
   mastered: { icon: CheckCircle2, color: "text-primary", bg: "bg-primary/10" },
@@ -60,11 +55,13 @@ const statusConfig: Record<CardStatus, { icon: React.ElementType; color: string;
   new: { icon: AlertCircle, color: "text-muted-foreground", bg: "bg-secondary" },
 }
 
-export function LibraryPanel({ className }: LibraryPanelProps) {
+export function LibraryPanel({ className, tasks = [] }: LibraryPanelProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredCategories = MOCK_CATEGORIES.filter(
+  const categories = useMemo(() => groupTasksIntoCategories(tasks), [tasks])
+
+  const filteredCategories = categories.filter(
     (cat) =>
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cat.cards.some((card) => card.name.toLowerCase().includes(searchQuery.toLowerCase())),
@@ -86,6 +83,11 @@ export function LibraryPanel({ className }: LibraryPanelProps) {
       </div>
 
       <div className="flex flex-col gap-3 overflow-y-auto app-scrollbar flex-1 pr-1">
+        {filteredCategories.length === 0 && (
+          <p className="text-center text-muted-foreground text-sm py-8">
+            {tasks.length === 0 ? "No tasks yet. Add some tasks to get started." : "No results found."}
+          </p>
+        )}
         {filteredCategories.map((category) => {
           const masteryPercent = (category.mastered / category.total) * 100
           const isExpanded = expandedCategory === category.name
