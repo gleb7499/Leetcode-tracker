@@ -1,10 +1,15 @@
 import { useEffect, useReducer } from "react"
 import { cn } from "@/lib/utils"
+import { ProfilePanel } from "./panels/profile-panel"
 import { StatsPanel } from "./panels/stats-panel"
 import { LibraryPanel } from "./panels/library-panel"
 import { SettingsPanel } from "./panels/settings-panel"
-import type { PanelType } from "./profile-menu"
-import type { Task } from "@/src/shared/types"
+import {
+  DESKTOP_SPLIT_PANEL_RIGHT_OFFSET_CLASS,
+  DESKTOP_SPLIT_PANEL_WIDTH_CLASS,
+} from "./panels/split-layout"
+import type { PanelType } from "./panels/panel-types"
+import type { CurrentUser, Task } from "@/src/shared/types"
 
 interface SidePanelProps {
   activePanel: PanelType
@@ -12,7 +17,7 @@ interface SidePanelProps {
   mode?: "overlay" | "docked"
   className?: string
   tasks?: Task[]
-  onLogout?: () => void
+  currentUser?: CurrentUser | null
 }
 
 type AnimPhase = "hidden" | "entering" | "exiting"
@@ -50,7 +55,7 @@ export function SidePanel({
   mode = "overlay",
   className,
   tasks,
-  onLogout,
+  currentUser,
 }: SidePanelProps) {
   const [anim, dispatch] = useReducer(animReducer, INITIAL_ANIM_STATE)
 
@@ -73,9 +78,15 @@ export function SidePanel({
         mode === "overlay" ? "pt-24 pb-6" : "pt-6 pb-6",
       )}
     >
+      {anim.renderedPanel === "profile" && currentUser && (
+        <ProfilePanel currentUser={currentUser} tasks={tasks} />
+      )}
+      {anim.renderedPanel === "profile" && !currentUser && (
+        <div className="p-6 text-sm text-muted-foreground">Profile data is not available.</div>
+      )}
       {anim.renderedPanel === "stats" && <StatsPanel tasks={tasks} />}
       {anim.renderedPanel === "library" && <LibraryPanel tasks={tasks} />}
-      {anim.renderedPanel === "settings" && <SettingsPanel onLogout={onLogout} />}
+      {anim.renderedPanel === "settings" && <SettingsPanel />}
     </div>
   )
 
@@ -85,8 +96,9 @@ export function SidePanel({
     return (
       <aside
         className={cn(
-          "fixed z-40 top-4 bottom-4 right-24",
-          "w-[min(56vw,920px)] min-w-[520px]",
+          "fixed z-40 top-4 bottom-4",
+          DESKTOP_SPLIT_PANEL_RIGHT_OFFSET_CLASS,
+          DESKTOP_SPLIT_PANEL_WIDTH_CLASS,
           "overflow-hidden rounded-3xl",
           "border border-white/10",
           "bg-card/45 backdrop-blur-2xl",

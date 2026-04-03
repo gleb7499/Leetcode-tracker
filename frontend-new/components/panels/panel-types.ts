@@ -1,0 +1,1 @@
+export type PanelType = "profile" | "stats" | "library" | "settings" | null

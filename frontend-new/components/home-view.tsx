@@ -38,7 +38,7 @@ export function HomeView({
     <div
       className={cn(
         isSplitLayout
-          ? "h-full flex flex-col items-center justify-center py-6"
+          ? "min-h-screen flex flex-col items-center justify-center px-6 py-6"
           : "min-h-screen flex flex-col items-center justify-center p-6",
         isExiting ? "animate-slide-out-up" : "animate-fade-up",
       )}
