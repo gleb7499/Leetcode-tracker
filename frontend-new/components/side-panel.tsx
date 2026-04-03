@@ -1,6 +1,4 @@
-"use client"
-
-import { useEffect, useState } from "react"
+import { useEffect, useReducer } from "react"
 import { cn } from "@/lib/utils"
 import { StatsPanel } from "./panels/stats-panel"
 import { LibraryPanel } from "./panels/library-panel"
@@ -14,33 +12,69 @@ interface SidePanelProps {
   className?: string
 }
 
-export function SidePanel({ activePanel, mode = "overlay", className }: SidePanelProps) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [isClosing, setIsClosing] = useState(false)
+type AnimPhase = "hidden" | "entering" | "exiting"
+
+interface AnimState {
+  phase: AnimPhase
+  /** The panel whose content should be rendered (non-null while animating out). */
+  renderedPanel: PanelType
+}
+
+type AnimAction =
+  | { type: "OPEN"; panel: PanelType }
+  | { type: "START_CLOSE" }
+  | { type: "CLOSE_DONE" }
+
+function animReducer(state: AnimState, action: AnimAction): AnimState {
+  switch (action.type) {
+    case "OPEN":
+      return { phase: "entering", renderedPanel: action.panel }
+    case "START_CLOSE":
+      return state.phase === "entering"
+        ? { phase: "exiting", renderedPanel: state.renderedPanel }
+        : state
+    case "CLOSE_DONE":
+      return { phase: "hidden", renderedPanel: null }
+    default:
+      return state
+  }
+}
+
+const INITIAL_ANIM_STATE: AnimState = { phase: "hidden", renderedPanel: null }
+
+export function SidePanel({
+  activePanel,
+  mode = "overlay",
+  className,
+}: SidePanelProps) {
+  const [anim, dispatch] = useReducer(animReducer, INITIAL_ANIM_STATE)
 
   useEffect(() => {
     if (activePanel) {
-      setIsVisible(true)
-      setIsClosing(false)
+      dispatch({ type: "OPEN", panel: activePanel })
     } else {
-      setIsClosing(true)
-      const timer = setTimeout(() => {
-        setIsVisible(false)
-        setIsClosing(false)
-      }, 400)
+      dispatch({ type: "START_CLOSE" })
+      const timer = setTimeout(() => dispatch({ type: "CLOSE_DONE" }), 400)
       return () => clearTimeout(timer)
     }
   }, [activePanel])
 
-  if (!isVisible && !activePanel) return null
+  if (anim.phase === "hidden") return null
 
   const panelContent = (
-    <div className={cn("h-full overflow-y-scroll app-scrollbar", mode === "overlay" ? "pt-24 pb-6" : "pt-6 pb-6")}>
-      {activePanel === "stats" && <StatsPanel />}
-      {activePanel === "library" && <LibraryPanel />}
-      {activePanel === "settings" && <SettingsPanel />}
+    <div
+      className={cn(
+        "h-full overflow-y-scroll app-scrollbar",
+        mode === "overlay" ? "pt-24 pb-6" : "pt-6 pb-6",
+      )}
+    >
+      {anim.renderedPanel === "stats" && <StatsPanel />}
+      {anim.renderedPanel === "library" && <LibraryPanel />}
+      {anim.renderedPanel === "settings" && <SettingsPanel />}
     </div>
   )
+
+  const isClosing = anim.phase === "exiting"
 
   if (mode === "docked") {
     return (
@@ -62,7 +96,7 @@ export function SidePanel({ activePanel, mode = "overlay", className }: SidePane
   }
 
   return (
-    <div 
+    <div
       className={cn(
         "fixed top-0 right-0 h-full w-full sm:w-96 z-40",
         "glass-panel",

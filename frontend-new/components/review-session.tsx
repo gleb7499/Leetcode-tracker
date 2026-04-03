@@ -1,67 +1,16 @@
-"use client"
-
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { ExternalLink, Check, Minus, X } from "lucide-react"
 import { REVIEW_FEEDBACK_OPTIONS, type ReviewFeedback } from "@/lib/review-feedback"
+import { MOCK_REVIEW_TASKS, type Difficulty } from "@/data/review-tasks"
 import { cn } from "@/lib/utils"
 
-type Difficulty = "Easy" | "Medium" | "Hard"
-
-interface ReviewTask {
-  id: string
-  name: string
-  url: string
-  difficulty: Difficulty
-  topics: string[]
-  notes: string
-}
-
-const reviewTasks: ReviewTask[] = [
-  {
-    id: "add-two-numbers",
-    name: "Add Two Numbers",
-    url: "https://leetcode.com/problems/add-two-numbers/",
-    difficulty: "Medium",
-    topics: ["Linked List", "Math", "Recursion"],
-    notes: "Add two numbers represented in reverse order using linked lists.",
-  },
-  {
-    id: "binary-search",
-    name: "Binary Search",
-    url: "https://leetcode.com/problems/binary-search/",
-    difficulty: "Easy",
-    topics: ["Array", "Binary Search"],
-    notes: "Find the target index in a sorted array in logarithmic time.",
-  },
-  {
-    id: "lru-cache",
-    name: "LRU Cache",
-    url: "https://leetcode.com/problems/lru-cache/",
-    difficulty: "Medium",
-    topics: ["Hash Table", "Linked List", "Design"],
-    notes: "Design an O(1) cache with get and put operations using LRU eviction.",
-  },
-  {
-    id: "merge-k-sorted-lists",
-    name: "Merge K Sorted Lists",
-    url: "https://leetcode.com/problems/merge-k-sorted-lists/",
-    difficulty: "Hard",
-    topics: ["Linked List", "Divide and Conquer", "Heap"],
-    notes: "Merge multiple sorted lists into one list with efficient complexity.",
-  },
-]
+const CARD_EXIT_MS = 320
+const SESSION_END_MS = 400
 
 const difficultyStyles: Record<Difficulty, string> = {
   Easy: "text-primary border-primary/30 bg-primary/12",
   Medium: "text-accent border-accent/30 bg-accent/12",
   Hard: "text-destructive border-destructive/30 bg-destructive/12",
-}
-
-interface ReviewSessionProps {
-  onReviewFeedback: (feedback: ReviewFeedback) => void
-  onEnd: () => void
-  currentProgress: number
-  totalCards: number
 }
 
 const feedbackButtonStyles: Record<ReviewFeedback, string> = {
@@ -82,45 +31,64 @@ const feedbackButtonStyles: Record<ReviewFeedback, string> = {
 
 const REVIEW_LAYOUT_MAX_WIDTH = "max-w-[960px]"
 
-export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalCards }: ReviewSessionProps) {
+interface ReviewSessionProps {
+  onReviewFeedback: (feedback: ReviewFeedback) => void
+  onEnd: () => void
+  currentProgress: number
+  totalCards: number
+}
+
+export function ReviewSession({
+  onReviewFeedback,
+  onEnd,
+  currentProgress,
+  totalCards,
+}: ReviewSessionProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isExiting, setIsExiting] = useState(false)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [cardAnimation, setCardAnimation] = useState<"enter" | "exit">("enter")
 
-  const currentTask = reviewTasks[currentIndex % reviewTasks.length]
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const currentTask = MOCK_REVIEW_TASKS[currentIndex % MOCK_REVIEW_TASKS.length]
   const normalizedProgress = Math.min(currentProgress, totalCards)
   const dailyProgressPercent = totalCards > 0 ? (normalizedProgress / totalCards) * 100 : 0
 
-  const advanceToNextTask = useCallback((feedback: ReviewFeedback) => {
-    if (isAdvancing) {
-      return
-    }
+  const triggerEnd = useCallback(() => {
+    setIsExiting(true)
+    exitTimerRef.current = setTimeout(onEnd, SESSION_END_MS)
+  }, [onEnd])
 
-    const nextProgress = Math.min(currentProgress + 1, totalCards)
-    const willFinishDay = totalCards === 0 || nextProgress >= totalCards
+  const advanceToNextTask = useCallback(
+    (feedback: ReviewFeedback) => {
+      if (isAdvancing) return
 
-    setIsAdvancing(true)
-    setCardAnimation("exit")
+      const nextProgress = Math.min(currentProgress + 1, totalCards)
+      const willFinishDay = totalCards === 0 || nextProgress >= totalCards
 
-    setTimeout(() => {
-      onReviewFeedback(feedback)
+      setIsAdvancing(true)
+      setCardAnimation("exit")
 
-      if (willFinishDay) {
-        setIsExiting(true)
-        setTimeout(onEnd, 400)
-      } else {
-        setCurrentIndex((prev) => prev + 1)
-        setIsAdvancing(false)
-        setCardAnimation("enter")
-      }
-    }, 320)
-  }, [currentProgress, isAdvancing, onEnd, onReviewFeedback, totalCards])
+      advanceTimerRef.current = setTimeout(() => {
+        onReviewFeedback(feedback)
+
+        if (willFinishDay) {
+          triggerEnd()
+        } else {
+          setCurrentIndex((prev) => prev + 1)
+          setIsAdvancing(false)
+          setCardAnimation("enter")
+        }
+      }, CARD_EXIT_MS)
+    },
+    [currentProgress, isAdvancing, onReviewFeedback, totalCards, triggerEnd],
+  )
 
   const handleExit = useCallback(() => {
-    setIsExiting(true)
-    setTimeout(onEnd, 400)
-  }, [onEnd])
+    triggerEnd()
+  }, [triggerEnd])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -138,32 +106,33 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
         handleExit()
       }
     }
-
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [advanceToNextTask, handleExit])
 
-  const handleFeedbackClick = useCallback((feedback: ReviewFeedback) => {
-    advanceToNextTask(feedback)
-  }, [advanceToNextTask])
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current)
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    }
+  }, [])
 
-  if (!currentTask) {
-    return null
-  }
+  if (!currentTask) return null
 
   return (
-    <div 
+    <div
       className={cn(
         "min-h-screen flex flex-col",
-        isExiting ? "animate-slide-out-up" : "animate-slide-in-up"
+        isExiting ? "animate-slide-out-up" : "animate-slide-in-up",
       )}
     >
       {/* Minimal header */}
       <header className="p-6">
         <div className={cn("mx-auto flex w-full items-center gap-4", REVIEW_LAYOUT_MAX_WIDTH)}>
-          <button 
+          <button
             onClick={handleExit}
             className="p-3 rounded-full glass text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Exit review session"
           >
             <X className="w-5 h-5" />
           </button>
@@ -171,9 +140,9 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
           {/* Progress indicator */}
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="h-1.5 flex-1 bg-foreground/10 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-out rounded-full"
-                style={{ width: `${dailyProgressPercent}%` }}
+              <div
+                className="progress-fill h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-out rounded-full"
+                style={{ "--progress": `${dailyProgressPercent}%` } as React.CSSProperties}
               />
             </div>
             <span className="text-sm text-muted-foreground tabular-nums whitespace-nowrap">
@@ -185,12 +154,12 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
 
       {/* Card area */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 pb-0">
-        <div 
+        <div
           className={cn(
             "w-full transition-all duration-500",
             REVIEW_LAYOUT_MAX_WIDTH,
             cardAnimation === "enter" && "animate-slide-in-up",
-            cardAnimation === "exit" && "animate-slide-out-up"
+            cardAnimation === "exit" && "animate-slide-out-up",
           )}
         >
           <article
@@ -198,7 +167,7 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
               "relative glass rounded-3xl p-8 min-h-[320px]",
               "transition-all duration-500 ease-out",
               "border border-white/10",
-              "shadow-[0_18px_50px_-32px_rgba(0,0,0,0.85)]"
+              "shadow-[0_18px_50px_-32px_rgba(0,0,0,0.85)]",
             )}
             role="article"
             aria-label={`Task card: ${currentTask.name}`}
@@ -222,7 +191,7 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
               <span
                 className={cn(
                   "shrink-0 rounded-xl px-4 py-2 text-sm font-semibold border",
-                  difficultyStyles[currentTask.difficulty]
+                  difficultyStyles[currentTask.difficulty],
                 )}
                 aria-label={`Difficulty: ${currentTask.difficulty}`}
               >
@@ -254,7 +223,7 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
               {REVIEW_FEEDBACK_OPTIONS.map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => handleFeedbackClick(option.value)}
+                  onClick={() => advanceToNextTask(option.value)}
                   disabled={isAdvancing}
                   className={cn(
                     "flex min-h-[74px] items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl",
@@ -262,7 +231,7 @@ export function ReviewSession({ onReviewFeedback, onEnd, currentProgress, totalC
                     "hover:scale-[1.01] active:scale-[0.98]",
                     "disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100",
                     "transition-all duration-300",
-                    feedbackButtonStyles[option.value]
+                    feedbackButtonStyles[option.value],
                   )}
                   aria-label={`${option.label} for task ${currentTask.name}`}
                 >

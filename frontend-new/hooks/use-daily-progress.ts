@@ -1,4 +1,3 @@
-"use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -86,30 +85,18 @@ const msUntilNextDay = (now: Date = new Date()): number => {
 }
 
 export function useDailyProgress(defaultTarget: number = DEFAULT_DAILY_TARGET) {
-  const [state, setState] = useState<DailyProgressState>(() => createDefaultState(defaultTarget))
+  const [state, setState] = useState<DailyProgressState>(() => {
+    const stored = typeof window !== "undefined"
+      ? window.localStorage.getItem(STORAGE_KEY)
+      : null
+    return parseStoredState(stored, defaultTarget)
+  })
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    setState(parseStoredState(stored, defaultTarget))
-  }, [defaultTarget])
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-
     let timerId: ReturnType<typeof setTimeout>
 
     const scheduleReset = () => {

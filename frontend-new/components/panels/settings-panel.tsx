@@ -1,4 +1,3 @@
-"use client"
 
 import { useState } from "react"
 import { Bell, Moon, Target, Clock, Volume2 } from "lucide-react"

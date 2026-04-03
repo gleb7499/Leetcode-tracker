@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect } from "react"
 import { User, BarChart3, BookOpen, Settings, X } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -16,21 +14,36 @@ const menuItems = [
   { id: "stats" as const, icon: BarChart3, label: "Progress" },
   { id: "library" as const, icon: BookOpen, label: "Library" },
   { id: "settings" as const, icon: Settings, label: "Settings" },
-]
+] as const
 
-export function ProfileMenu({ activePanel, onPanelChange, mode = "floating" }: ProfileMenuProps) {
+/** CSS delay class for each menu item index (0–2). */
+const menuDelayClass: Record<number, string> = {
+  0: "animate-delay-menu-0",
+  1: "animate-delay-menu-1",
+  2: "animate-delay-menu-2",
+}
+
+export function ProfileMenu({
+  activePanel,
+  onPanelChange,
+  mode = "floating",
+}: ProfileMenuProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearTimer = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+  }
 
   const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    clearTimer()
     setIsHovering(true)
     timeoutRef.current = setTimeout(() => setIsExpanded(true), 100)
   }
 
   const handleMouseLeave = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    clearTimer()
     setIsHovering(false)
     timeoutRef.current = setTimeout(() => setIsExpanded(false), 300)
   }
@@ -40,20 +53,14 @@ export function ProfileMenu({ activePanel, onPanelChange, mode = "floating" }: P
   }
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
+    return () => clearTimer()
   }, [])
 
   if (mode === "rail") {
     return (
       <div className="h-full w-full rounded-3xl border border-white/10 bg-card/45 backdrop-blur-2xl shadow-[0_18px_50px_-32px_rgba(0,0,0,0.85)] flex flex-col items-center py-6">
         <button
-          className={cn(
-            "relative flex items-center justify-center rounded-full transition-all duration-300",
-            "glass-profile w-16 h-16",
-            "hover:scale-105"
-          )}
+          className="relative flex items-center justify-center rounded-full transition-all duration-300 glass-profile w-16 h-16 hover:scale-105"
           onClick={() => onPanelChange(null)}
           aria-label="Close side panel"
         >
@@ -68,22 +75,23 @@ export function ProfileMenu({ activePanel, onPanelChange, mode = "floating" }: P
               className={cn(
                 "group relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
                 "glass-subtle hover:glass-profile",
-                activePanel === item.id && "ring-2 ring-primary/60 bg-primary/10"
+                activePanel === item.id && "ring-2 ring-primary/60 bg-primary/10",
               )}
               aria-label={item.label}
             >
               <item.icon
                 className={cn(
                   "w-5 h-5 transition-all duration-300",
-                  activePanel === item.id ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                  activePanel === item.id
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-foreground",
                 )}
               />
-
               <span
                 className={cn(
                   "absolute right-full mr-3 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap",
                   "glass-subtle text-foreground",
-                  "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                  "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none",
                 )}
               >
                 {item.label}
@@ -106,27 +114,40 @@ export function ProfileMenu({ activePanel, onPanelChange, mode = "floating" }: P
           "relative flex items-center justify-center rounded-full transition-all duration-500 ease-out",
           "glass-profile",
           isExpanded || isHovering ? "w-16 h-16" : "w-11 h-11 hover:scale-110",
-          activePanel && "ring-2 ring-primary/50"
+          activePanel && "ring-2 ring-primary/50",
         )}
         onClick={() => activePanel && onPanelChange(null)}
         aria-label="Profile menu"
       >
         {activePanel ? (
-          <X className={cn("text-foreground transition-all duration-300", isExpanded ? "w-6 h-6" : "w-5 h-5")} />
+          <X
+            className={cn(
+              "text-foreground transition-all duration-300",
+              isExpanded ? "w-6 h-6" : "w-5 h-5",
+            )}
+          />
         ) : (
-          <User className={cn("text-foreground transition-all duration-300", isExpanded ? "w-7 h-7" : "w-5 h-5")} />
+          <User
+            className={cn(
+              "text-foreground transition-all duration-300",
+              isExpanded ? "w-7 h-7" : "w-5 h-5",
+            )}
+          />
         )}
-        
-        <div className={cn(
-          "absolute inset-0 rounded-full bg-primary/20 blur-xl transition-opacity duration-500",
-          isHovering ? "opacity-100" : "opacity-0"
-        )} />
+        <div
+          className={cn(
+            "absolute inset-0 rounded-full bg-primary/20 blur-xl transition-opacity duration-500",
+            isHovering ? "opacity-100" : "opacity-0",
+          )}
+        />
       </button>
 
-      <div className={cn(
-        "flex flex-col items-center gap-3 mt-4 transition-all duration-300",
-        isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
-      )}>
+      <div
+        className={cn(
+          "flex flex-col items-center gap-3 mt-4 transition-all duration-300",
+          isExpanded ? "opacity-100" : "opacity-0 pointer-events-none",
+        )}
+      >
         {menuItems.map((item, index) => (
           <button
             key={item.id}
@@ -135,24 +156,25 @@ export function ProfileMenu({ activePanel, onPanelChange, mode = "floating" }: P
               "group relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
               "glass-subtle hover:glass-profile",
               activePanel === item.id && "ring-2 ring-primary/60 bg-primary/10",
-              isExpanded ? "animate-menu-item-drop" : ""
+              isExpanded && cn("animate-menu-item-drop", menuDelayClass[index]),
             )}
-            style={{ 
-              animationDelay: isExpanded ? `${index * 50}ms` : "0ms",
-              opacity: isExpanded ? undefined : 0
-            }}
             aria-label={item.label}
           >
-            <item.icon className={cn(
-              "w-5 h-5 transition-all duration-300",
-              activePanel === item.id ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-            )} />
-            
-            <span className={cn(
-              "absolute right-full mr-3 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap",
-              "glass-subtle text-foreground",
-              "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-            )}>
+            <item.icon
+              className={cn(
+                "w-5 h-5 transition-all duration-300",
+                activePanel === item.id
+                  ? "text-primary"
+                  : "text-muted-foreground group-hover:text-foreground",
+              )}
+            />
+            <span
+              className={cn(
+                "absolute right-full mr-3 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap",
+                "glass-subtle text-foreground",
+                "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none",
+              )}
+            >
               {item.label}
             </span>
           </button>
