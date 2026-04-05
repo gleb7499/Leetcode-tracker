@@ -124,12 +124,7 @@ export default function App() {
   if (!currentUser) return null
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-background">
-      {/* Ambient background – morphing glass orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="ambient-orb ambient-orb--primary animate-morph" />
-        <div className="ambient-orb ambient-orb--accent animate-morph animate-delay-neg-4s" />
-      </div>
+    <main className="min-h-screen relative overflow-hidden">
 
       {/* Profile menu – always visible except during review */}
       {!isReviewView && (

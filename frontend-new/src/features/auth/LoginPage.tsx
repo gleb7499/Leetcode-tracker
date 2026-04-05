@@ -33,12 +33,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="ambient-orb ambient-orb--primary animate-morph" />
-        <div className="ambient-orb ambient-orb--accent animate-morph animate-delay-neg-4s" />
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
 
       <div className="w-full max-w-md glass rounded-3xl p-8 relative z-10 animate-fade-up">
         <div className="text-center mb-8">
