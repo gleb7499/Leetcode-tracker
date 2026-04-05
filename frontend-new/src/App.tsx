@@ -15,7 +15,7 @@ import { type ReviewFeedback } from "@/lib/review-feedback"
 import type { ReviewStatus } from "@/src/shared/types"
 import { cn } from "@/lib/utils"
 
-type ViewState = "home" | "review" | "transitioning"
+type ViewState = "home" | "review" | "transitioning-to-review"
 
 const TRANSITION_DURATION_MS = 400
 
@@ -41,6 +41,7 @@ export default function App() {
 
   const todayTasks = getTasksForToday()
   const isReviewView = view === "review"
+  const isTransitioningToReview = view === "transitioning-to-review"
   const isPanelOpen = !isReviewView && activePanel !== null
   const isDesktopPanelOpen = isPanelOpen && isSplitDesktop
 
@@ -51,7 +52,7 @@ export default function App() {
     incrementCompleted,
   } = useDailyProgress(todayTasks.length)
 
-  const scheduleTransition = useCallback((nextView: ViewState) => {
+  const scheduleTransition = useCallback((nextView: Exclude<ViewState, "transitioning-to-review">) => {
     if (transitionTimerRef.current) {
       clearTimeout(transitionTimerRef.current)
     }
@@ -61,13 +62,15 @@ export default function App() {
   }, [])
 
   const handleStartSession = useCallback(() => {
-    if (todayRemaining <= 0) {
+    const fresh = getTasksForToday()
+
+    if (todayRemaining <= 0 || fresh.length === 0) {
       return
     }
-    const fresh = getTasksForToday()
+
     setSessionTasks(fresh)
     setActivePanel(null)
-    setView("transitioning")
+    setView("transitioning-to-review")
     scheduleTransition("review")
   }, [todayRemaining, getTasksForToday, scheduleTransition])
 
@@ -80,9 +83,13 @@ export default function App() {
   )
 
   const handleEndSession = useCallback(() => {
-    setView("transitioning")
-    scheduleTransition("home")
-  }, [scheduleTransition])
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current)
+      transitionTimerRef.current = null
+    }
+    setSessionTasks([])
+    setView("home")
+  }, [])
 
   const handlePanelChange = useCallback((panel: PanelType) => {
     setActivePanel(panel)
@@ -120,6 +127,12 @@ export default function App() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (view === "review" && sessionTasks.length === 0) {
+      setView("home")
+    }
+  }, [view, sessionTasks.length])
 
   if (!currentUser) return null
 
@@ -170,7 +183,8 @@ export default function App() {
               todayProgress={todayProgress}
               todayTotal={todayTotal}
               onStartSession={handleStartSession}
-              isExiting={view === "transitioning"}
+              isExiting={isTransitioningToReview}
+              isStartDisabled={todayTasks.length === 0 || isTransitioningToReview}
               layout={isDesktopPanelOpen ? "split" : "full"}
             />
           </div>

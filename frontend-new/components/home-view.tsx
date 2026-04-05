@@ -7,6 +7,7 @@ interface HomeViewProps {
   todayTotal: number
   onStartSession: () => void
   isExiting: boolean
+  isStartDisabled?: boolean
   layout?: "full" | "split"
 }
 
@@ -28,6 +29,7 @@ export function HomeView({
   todayTotal,
   onStartSession,
   isExiting,
+  isStartDisabled = false,
   layout = "full",
 }: HomeViewProps) {
   const isSplitLayout = layout === "split"
@@ -56,7 +58,7 @@ export function HomeView({
         <div className="animate-delay-300">
           <StartButton
             onClick={onStartSession}
-            disabled={todayTotal - todayProgress <= 0}
+            disabled={isStartDisabled}
           />
         </div>
 
