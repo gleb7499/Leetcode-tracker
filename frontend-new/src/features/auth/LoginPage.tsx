@@ -73,7 +73,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div
+      className="h-[100dvh] min-h-screen flex justify-center p-4 relative overflow-x-hidden overflow-y-scroll app-scrollbar"
+      style={{ alignItems: "safe center" }}
+    >
       <div className="w-full max-w-md glass rounded-3xl p-8 relative z-10 animate-fade-up">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🧠</div>
