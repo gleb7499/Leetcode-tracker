@@ -20,6 +20,11 @@ const panelMenuItems = [
 
 const ANIMATION_DURATION_MS = 380
 const ITEM_STAGGER_MS = 70
+const MENU_ITEM_SIZE_PX = 48
+const MENU_ITEM_GAP_PX = 12
+const MENU_ITEM_STEP_PX = MENU_ITEM_SIZE_PX + MENU_ITEM_GAP_PX
+const ACTIVE_INDICATOR_DURATION_MS = 500
+const ACTIVE_INDICATOR_EASING = "cubic-bezier(0.4, 0, 0.2, 1)"
 
 export function ProfileMenu({
   activePanel,
@@ -31,6 +36,13 @@ export function ProfileMenu({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const hasActivePanel = activePanel !== null
   const isMenuVisible = hasActivePanel || isExpanded
+  const activePanelIndex = panelMenuItems.findIndex((item) => item.id === activePanel)
+
+  const activeIndicatorStyle = {
+    transform: `translate(-50%, ${Math.max(activePanelIndex, 0) * MENU_ITEM_STEP_PX}px)`,
+    transitionDuration: `${ACTIVE_INDICATOR_DURATION_MS}ms`,
+    transitionTimingFunction: ACTIVE_INDICATOR_EASING,
+  }
 
   const handleItemClick = (panelId: (typeof panelMenuItems)[number]["id"]) => {
     if (activePanel !== panelId) {
@@ -94,15 +106,22 @@ export function ProfileMenu({
           )}
         </button>
 
-        <div className="mt-6 flex flex-col items-center gap-3">
+        <div className="mt-6 relative flex flex-col items-center gap-3">
+          {activePanelIndex >= 0 && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-0 z-0 w-12 h-12 rounded-full border border-primary/45 bg-primary/10 shadow-[0_0_28px_-16px] shadow-primary/75"
+              style={activeIndicatorStyle}
+            />
+          )}
+
           {panelMenuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleItemClick(item.id)}
               className={cn(
-                "group relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
+                "group relative z-10 flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
                 "glass-subtle hover:glass-profile",
-                activePanel === item.id && "ring-2 ring-primary/60 bg-primary/10",
               )}
               aria-label={item.label}
             >
@@ -184,34 +203,44 @@ export function ProfileMenu({
         )}
         style={{ transitionDuration: `${ANIMATION_DURATION_MS}ms` }}
       >
-        {panelMenuItems.map((item, index) => (
-          <button
-            key={item.id}
-            onClick={() => handleItemClick(item.id)}
-            role="menuitem"
-            className={cn(
-              "group relative flex items-center justify-center w-12 h-12 rounded-full",
-              "glass-subtle hover:glass-profile",
-              "transition-all ease-[cubic-bezier(0.22,1,0.36,1)]",
-              activePanel === item.id && "ring-2 ring-primary/60 bg-primary/10",
-              isMenuVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-4 scale-75 pointer-events-none",
-            )}
-            aria-label={item.label}
-            style={{
-              transitionDuration: `${ANIMATION_DURATION_MS}ms`,
-              transitionDelay: isMenuVisible ? `${index * ITEM_STAGGER_MS}ms` : "0ms",
-            }}
-          >
-            <item.icon
-              className={cn(
-                "w-5 h-5 transition-all duration-300",
-                activePanel === item.id
-                  ? "text-primary"
-                  : "text-muted-foreground group-hover:text-foreground",
-              )}
+        <div className="relative flex flex-col items-center gap-3">
+          {activePanelIndex >= 0 && isMenuVisible && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-0 z-0 w-12 h-12 rounded-full border border-primary/45 bg-primary/10 shadow-[0_0_28px_-16px] shadow-primary/75"
+              style={activeIndicatorStyle}
             />
-          </button>
-        ))}
+          )}
+
+          {panelMenuItems.map((item, index) => (
+            <button
+              key={item.id}
+              onClick={() => handleItemClick(item.id)}
+              role="menuitem"
+              className={cn(
+                "group relative z-10 flex items-center justify-center w-12 h-12 rounded-full",
+                "glass-subtle hover:glass-profile",
+                "transition-all ease-[cubic-bezier(0.22,1,0.36,1)]",
+                isMenuVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-4 scale-75 pointer-events-none",
+              )}
+              aria-label={item.label}
+              style={{
+                transitionDuration: `${ANIMATION_DURATION_MS}ms`,
+                transitionDelay: isMenuVisible ? `${index * ITEM_STAGGER_MS}ms` : "0ms",
+              }}
+            >
+              <item.icon
+                className={cn(
+                  "w-5 h-5 transition-all duration-300",
+                  activePanel === item.id
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-foreground",
+                )}
+              />
+            </button>
+          ))}
+        </div>
+
         {onRequestLogout && (
           <button
             onClick={handleLogoutClick}
