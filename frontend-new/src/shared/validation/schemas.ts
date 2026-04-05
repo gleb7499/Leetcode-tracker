@@ -1,42 +1,42 @@
 import { z } from 'zod';
 
 export const LoginSchema = z.object({
-  email: z.string().email('Введите корректный email'),
-  password: z.string().min(8, 'Минимум 8 символов'),
+  email: z.string().email('Enter a valid email'),
+  password: z.string().min(8, 'Minimum 8 characters'),
   remember: z.boolean().optional(),
 });
 
 export const RegisterSchema = z
   .object({
-    name: z.string().min(2, 'Минимум 2 символа').max(50, 'Максимум 50 символов'),
-    email: z.string().email('Введите корректный email'),
+    name: z.string().min(2, 'Minimum 2 characters').max(50, 'Maximum 50 characters'),
+    email: z.string().email('Enter a valid email'),
     password: z
       .string()
-      .min(8, 'Минимум 8 символов')
-      .regex(/[A-Za-z]/, 'Должен содержать буквы')
-      .regex(/\d/, 'Должен содержать цифры'),
+      .min(8, 'Minimum 8 characters')
+      .regex(/[A-Za-z]/, 'Must contain letters')
+      .regex(/\d/, 'Must contain digits'),
     passwordConfirm: z.string(),
     terms: z.literal(true, {
-      error: 'Необходимо принять условия',
+      error: 'You must accept the terms',
     }),
   })
   .refine((data) => data.password === data.passwordConfirm, {
-    message: 'Пароли не совпадают',
+    message: 'Passwords do not match',
     path: ['passwordConfirm'],
   });
 
 export const TaskSchema = z.object({
-  url: z.string().url('Введите корректный URL'),
-  name: z.string().min(3, 'Минимум 3 символа').max(200, 'Максимум 200 символов'),
+  url: z.string().url('Enter a valid URL'),
+  name: z.string().min(3, 'Minimum 3 characters').max(200, 'Maximum 200 characters'),
   difficulty: z.enum(['Easy', 'Medium', 'Hard'], {
-    error: 'Выберите сложность',
+    error: 'Select difficulty',
   }),
   topics: z.string().optional(),
   notes: z.string().optional(),
 });
 
 export const ForgotPasswordSchema = z.object({
-  email: z.string().email('Введите корректный email'),
+  email: z.string().email('Enter a valid email'),
 });
 
 export type LoginFormData = z.infer<typeof LoginSchema>;

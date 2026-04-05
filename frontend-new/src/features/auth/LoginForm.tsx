@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { LoginSchema, type LoginFormData } from "@/src/shared/validation/schemas"
 import { cn } from "@/lib/utils"
+import { AuthSubmitButton } from "./AuthSubmitButton"
 
 interface LoginFormProps {
   onLogin: (
@@ -106,7 +107,7 @@ export function LoginForm({ onLogin, isProcessing }: LoginFormProps) {
           type="checkbox"
           checked={remember}
           onChange={(e) => setRemember(e.target.checked)}
-          className="w-4 h-4 rounded accent-primary"
+          className="w-4 h-4"
         />
         <span className="text-sm text-muted-foreground">Remember me</span>
       </label>
@@ -125,13 +126,9 @@ export function LoginForm({ onLogin, isProcessing }: LoginFormProps) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isProcessing}
-        className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
-      >
+      <AuthSubmitButton type="submit" disabled={isProcessing}>
         {isProcessing ? "Signing in…" : "Sign In"}
-      </button>
+      </AuthSubmitButton>
     </form>
   )
 }

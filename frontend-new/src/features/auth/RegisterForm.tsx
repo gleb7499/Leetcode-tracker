@@ -3,6 +3,7 @@ import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import { RegisterSchema } from "@/src/shared/validation/schemas"
 import { PasswordStrength } from "./PasswordStrength"
 import { cn } from "@/lib/utils"
+import { AuthSubmitButton } from "./AuthSubmitButton"
 
 interface RegisterFormProps {
   onRegister: (
@@ -182,7 +183,7 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
           type="checkbox"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
-          className="mt-0.5 w-4 h-4 rounded accent-primary"
+          className="mt-0.5 w-4 h-4"
         />
         <span className="text-sm text-muted-foreground">
           I accept the{" "}
@@ -211,13 +212,9 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isProcessing}
-        className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
-      >
+      <AuthSubmitButton type="submit" disabled={isProcessing}>
         {isProcessing ? "Creating account…" : "Create Account"}
-      </button>
+      </AuthSubmitButton>
     </form>
   )
 }

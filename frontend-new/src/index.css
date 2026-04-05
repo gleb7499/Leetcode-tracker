@@ -213,6 +213,86 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Unified checkbox style for current and future forms */
+  input[type='checkbox'] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 1.5px solid color-mix(in oklab, var(--muted-foreground) 45%, transparent);
+    background-color: color-mix(in oklab, var(--background) 88%, var(--foreground) 12%);
+    transition:
+      border-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: pointer;
+  }
+
+  input[type='checkbox']::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.3rem;
+    border-left: 2px solid var(--primary);
+    border-bottom: 2px solid var(--primary);
+    transform: translateY(-0.03rem) rotate(-45deg) scale(0.35);
+    transform-origin: center;
+    opacity: 0;
+    transition:
+      transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 120ms ease-out;
+  }
+
+  input[type='checkbox']:hover {
+    border-color: color-mix(in oklab, var(--primary) 60%, var(--muted-foreground) 40%);
+    background-color: color-mix(in oklab, var(--background) 80%, var(--primary) 20%);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+
+  input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+
+  input[type='checkbox']:active {
+    transform: scale(0.92);
+  }
+
+  input[type='checkbox']:checked {
+    border-color: color-mix(in oklab, var(--primary) 72%, transparent);
+    background-color: color-mix(in oklab, var(--primary) 16%, transparent);
+    animation: checkbox-pop 170ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  input[type='checkbox']:checked::before {
+    opacity: 1;
+    transform: translateY(-0.03rem) rotate(-45deg) scale(1);
+  }
+
+  input[type='checkbox']:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes checkbox-pop {
+  0% {
+    transform: scale(0.88);
+  }
+
+  60% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Scrollable container utility */
@@ -301,6 +381,37 @@
   box-shadow:
     -20px 0 60px rgba(0, 0, 0, 0.3),
     inset 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ── Auth submit button layered hover (SSOT) ─────────── */
+.auth-submit-surface {
+  transform: scale(1);
+  will-change: transform, box-shadow;
+  transition:
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.auth-submit-sheen {
+  opacity: 0.3;
+  transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.auth-submit-button:hover .auth-submit-surface {
+  transform: scale(1.02);
+}
+
+.auth-submit-button:hover .auth-submit-sheen {
+  opacity: 0.45;
+}
+
+.auth-submit-button:active .auth-submit-surface {
+  transform: scale(0.98);
+}
+
+.auth-submit-button:disabled .auth-submit-surface,
+.auth-submit-button:disabled .auth-submit-sheen {
+  transform: none;
 }
 
 /* ── Global ambient breathing layer ───────────────────── */
