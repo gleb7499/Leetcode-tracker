@@ -15,27 +15,13 @@ const difficultyStyles: Record<Difficulty, string> = {
   Hard: "text-destructive border-destructive/30 bg-destructive/12",
 }
 
-const feedbackButtonSurfaceStyles: Record<ReviewFeedback, string> = {
-  remember: [
-    "bg-primary",
-    "shadow-[0_0_34px_-8px] shadow-primary/52",
-    "group-hover:shadow-[0_0_52px_-8px] group-hover:shadow-primary/68",
-  ].join(" "),
-  partial: [
-    "glass-subtle",
-    "hover:border-accent/35 hover:bg-accent/[0.1]",
-  ].join(" "),
-  forgot: [
-    "glass-subtle",
-    "hover:border-destructive/35 hover:bg-destructive/[0.1]",
-  ].join(" "),
-}
+const feedbackButtonSurfaceStyles = [
+  "glass-subtle",
+  "group-hover:border-primary/35",
+  "group-hover:bg-primary/[0.1]",
+].join(" ")
 
-const feedbackButtonContentStyles: Record<ReviewFeedback, string> = {
-  remember: "text-primary-foreground",
-  partial: "text-foreground/90 group-hover:text-accent",
-  forgot: "text-foreground/90 group-hover:text-destructive",
-}
+const feedbackButtonContentStyles = "text-foreground/90 group-hover:text-primary"
 
 const REVIEW_LAYOUT_MAX_WIDTH = "max-w-[960px]"
 
@@ -150,7 +136,7 @@ export function ReviewSession({
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="h-1.5 flex-1 bg-foreground/10 rounded-full overflow-hidden">
               <div
-                className="progress-fill h-full bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-out rounded-full"
+                className="progress-fill h-full bg-primary transition-all duration-700 ease-out rounded-full"
                 style={{ "--progress": `${dailyProgressPercent}%` } as React.CSSProperties}
               />
             </div>
@@ -247,14 +233,14 @@ export function ReviewSession({
                     className={cn(
                       "pointer-events-none absolute inset-0 rounded-2xl transition-all duration-300",
                       !isAdvancing && "group-hover:scale-[1.01] group-active:scale-[0.98]",
-                      feedbackButtonSurfaceStyles[option.value],
+                      feedbackButtonSurfaceStyles,
                     )}
                   />
 
                   <span
                     className={cn(
                       "relative z-10 inline-flex items-center justify-center gap-1.5 subpixel-antialiased transition-colors duration-300",
-                      feedbackButtonContentStyles[option.value],
+                      feedbackButtonContentStyles,
                     )}
                   >
                     {option.value === "remember" && <Check className="w-4 h-4 shrink-0" />}
