@@ -15,20 +15,26 @@ const difficultyStyles: Record<Difficulty, string> = {
   Hard: "text-destructive border-destructive/30 bg-destructive/12",
 }
 
-const feedbackButtonStyles: Record<ReviewFeedback, string> = {
+const feedbackButtonSurfaceStyles: Record<ReviewFeedback, string> = {
   remember: [
-    "bg-primary text-primary-foreground",
-    "shadow-[0_0_30px_-8px] shadow-primary/50",
-    "hover:shadow-[0_0_40px_-8px] hover:shadow-primary/65",
+    "bg-primary",
+    "shadow-[0_0_34px_-8px] shadow-primary/52",
+    "group-hover:shadow-[0_0_52px_-8px] group-hover:shadow-primary/68",
   ].join(" "),
   partial: [
-    "glass-subtle text-foreground/90",
-    "hover:border-accent/35 hover:bg-accent/[0.1] hover:text-accent",
+    "glass-subtle",
+    "hover:border-accent/35 hover:bg-accent/[0.1]",
   ].join(" "),
   forgot: [
-    "glass-subtle text-foreground/90",
-    "hover:text-destructive hover:border-destructive/35 hover:bg-destructive/[0.1]",
+    "glass-subtle",
+    "hover:border-destructive/35 hover:bg-destructive/[0.1]",
   ].join(" "),
+}
+
+const feedbackButtonContentStyles: Record<ReviewFeedback, string> = {
+  remember: "text-primary-foreground",
+  partial: "text-foreground/90 group-hover:text-accent",
+  forgot: "text-foreground/90 group-hover:text-destructive",
 }
 
 const REVIEW_LAYOUT_MAX_WIDTH = "max-w-[960px]"
@@ -229,20 +235,34 @@ export function ReviewSession({
                   onClick={() => advanceToNextTask(option.value)}
                   disabled={isAdvancing}
                   className={cn(
-                    "flex min-h-[74px] items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl",
+                    "group relative min-h-[74px] rounded-2xl overflow-visible py-3.5 px-3",
                     "font-semibold text-center",
-                    "hover:scale-[1.01] active:scale-[0.98]",
-                    "disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100",
-                    "transition-all duration-300",
-                    feedbackButtonStyles[option.value],
+                    "disabled:opacity-60 disabled:cursor-not-allowed",
+                    "transition-opacity duration-300",
                   )}
                   aria-label={`${option.label} for task ${currentTask.name}`}
                 >
-                  {option.value === "remember" && <Check className="w-4 h-4 shrink-0" />}
-                  {option.value === "partial" && <Minus className="w-4 h-4 shrink-0" />}
-                  {option.value === "forgot" && <X className="w-4 h-4 shrink-0" />}
-                  <span className="max-w-full text-center leading-tight text-[clamp(0.82rem,1.7vw,0.95rem)] whitespace-normal break-words">
-                    {option.label}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "pointer-events-none absolute inset-0 rounded-2xl transition-all duration-300",
+                      !isAdvancing && "group-hover:scale-[1.01] group-active:scale-[0.98]",
+                      feedbackButtonSurfaceStyles[option.value],
+                    )}
+                  />
+
+                  <span
+                    className={cn(
+                      "relative z-10 inline-flex items-center justify-center gap-1.5 subpixel-antialiased transition-colors duration-300",
+                      feedbackButtonContentStyles[option.value],
+                    )}
+                  >
+                    {option.value === "remember" && <Check className="w-4 h-4 shrink-0" />}
+                    {option.value === "partial" && <Minus className="w-4 h-4 shrink-0" />}
+                    {option.value === "forgot" && <X className="w-4 h-4 shrink-0" />}
+                    <span className="max-w-full text-center leading-tight text-[clamp(0.82rem,1.7vw,0.95rem)] whitespace-normal break-words">
+                      {option.label}
+                    </span>
                   </span>
                 </button>
               ))}

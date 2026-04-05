@@ -18,8 +18,6 @@ const panelMenuItems = [
   { id: "settings" as const, icon: Settings, label: "Settings" },
 ] as const
 
-const EXPAND_DELAY_MS = 80
-const COLLAPSE_DELAY_MS = 180
 const ANIMATION_DURATION_MS = 380
 const ITEM_STAGGER_MS = 70
 
@@ -30,26 +28,9 @@ export function ProfileMenu({
   onRequestLogout,
 }: ProfileMenuProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const hasActivePanel = activePanel !== null
   const isMenuVisible = hasActivePanel || isExpanded
-
-  const clearTimer = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-  }
-
-  const openMenu = () => {
-    if (hasActivePanel) return
-    clearTimer()
-    timeoutRef.current = setTimeout(() => setIsExpanded(true), EXPAND_DELAY_MS)
-  }
-
-  const closeMenuWithDelay = () => {
-    if (hasActivePanel) return
-    clearTimer()
-    timeoutRef.current = setTimeout(() => setIsExpanded(false), COLLAPSE_DELAY_MS)
-  }
 
   const handleItemClick = (panelId: (typeof panelMenuItems)[number]["id"]) => {
     if (activePanel !== panelId) {
@@ -59,7 +40,6 @@ export function ProfileMenu({
   }
 
   const handleToggleMenu = () => {
-    clearTimer()
     if (hasActivePanel) {
       onPanelChange(null)
       setIsExpanded(false)
@@ -71,10 +51,6 @@ export function ProfileMenu({
   const handleLogoutClick = () => {
     onRequestLogout?.()
   }
-
-  useEffect(() => {
-    return () => clearTimer()
-  }, [])
 
   useEffect(() => {
     if (!isMenuVisible || hasActivePanel) return
@@ -149,8 +125,6 @@ export function ProfileMenu({
     <div
       ref={containerRef}
       className="fixed top-6 right-6 z-50 flex flex-col items-center"
-      onMouseEnter={openMenu}
-      onMouseLeave={closeMenuWithDelay}
     >
       <button
         className={cn(
