@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { storage } from '../utils/storage';
 import { generateId, parseStringToArray } from '../utils/helpers';
-import type { Task, ReviewStatus, Difficulty } from '../types';
+import type { Task, ReviewStatus, Difficulty, ScheduleMode, TaskSource } from '../types';
 
 const STORAGE_KEY = 'leetcode-tracker-tasks';
 
@@ -56,6 +56,14 @@ function calculateNextReview(status: ReviewStatus): string {
   return date.toISOString();
 }
 
+function getScheduledReviewDate(scheduleMode: ScheduleMode): string {
+  const date = new Date();
+  if (scheduleMode === 'tomorrow') {
+    date.setDate(date.getDate() + 1);
+  }
+  return date.toISOString();
+}
+
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>(() => {
     return storage.get<Task[]>(STORAGE_KEY) ?? initDemoData();
@@ -83,7 +91,16 @@ export function useTasks() {
       difficulty: Difficulty;
       topics: string;
       notes: string;
+      source?: TaskSource;
+      sourceMeta?: Task['sourceMeta'];
+      scheduleMode?: ScheduleMode;
+      nextReviewAt?: string;
     }) => {
+      const normalizedScheduleMode = data.scheduleMode ?? 'today';
+      const nextReview = data.nextReviewAt
+        ? new Date(data.nextReviewAt).toISOString()
+        : getScheduledReviewDate(normalizedScheduleMode);
+
       const task: Task = {
         id: generateId('task'),
         name: data.name.trim(),
@@ -91,8 +108,10 @@ export function useTasks() {
         difficulty: data.difficulty,
         topics: parseStringToArray(data.topics),
         notes: data.notes.trim(),
+        source: data.source ?? 'leetcode',
+        sourceMeta: data.sourceMeta,
         createdAt: new Date().toISOString(),
-        nextReview: new Date().toISOString(),
+        nextReview,
         reviews: [],
       };
       const updated = [...tasks, task];
