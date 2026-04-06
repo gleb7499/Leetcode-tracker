@@ -45,6 +45,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const prevFocusRef = useRef<HTMLElement | null>(null)
+  const prevFocusSelectorRef = useRef<string | null>(null)
 
   const handleClose = useCallback(() => {
     dispatch({ type: "RESET" })
@@ -55,6 +56,11 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
   useEffect(() => {
     if (!isOpen) return
     prevFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    if (prevFocusRef.current?.id) {
+      prevFocusSelectorRef.current = `#${CSS.escape(prevFocusRef.current.id)}`
+    } else {
+      prevFocusSelectorRef.current = null
+    }
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
     const timer = setTimeout(() => closeButtonRef.current?.focus(), 0)
@@ -86,7 +92,12 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
       clearTimeout(timer)
       document.removeEventListener("keydown", onKeyDown)
       document.body.style.overflow = previousOverflow
-      prevFocusRef.current?.focus()
+      if (prevFocusRef.current && document.contains(prevFocusRef.current)) {
+        prevFocusRef.current.focus()
+      } else if (prevFocusSelectorRef.current) {
+        const fallback = document.querySelector<HTMLElement>(prevFocusSelectorRef.current)
+        fallback?.focus()
+      }
     }
   }, [isOpen, handleClose])
 

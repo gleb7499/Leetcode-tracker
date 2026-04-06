@@ -44,9 +44,8 @@ export default function App() {
   }, [currentUser, navigate])
 
   const todayTasks = getTasksForToday()
-  const safeView: ViewState | "home" = view === "review" && sessionTasks.length === 0 ? "home" : view
-  const isReviewView = safeView === "review"
-  const isTransitioningToReview = safeView === "transitioning-to-review"
+  const isReviewView = view === "review"
+  const isTransitioningToReview = view === "transitioning-to-review"
   const isPanelOpen = !isReviewView && activePanel !== null
   const isDesktopPanelOpen = isPanelOpen && isSplitDesktop
 

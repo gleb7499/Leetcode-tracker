@@ -23,6 +23,9 @@ export interface TaskSourceResolver {
   resolve: (input: string) => Promise<ResolveTaskResult>
 }
 
+const MOCK_LEETCODE_RESOLVE_DELAY_MS = 900
+const LEETCODE_FALLBACK_DIFFICULTY: Difficulty = "Medium"
+
 function normalizeLeetCodeUrl(input: string): URL | null {
   try {
     const parsed = new URL(input.trim())
@@ -51,7 +54,7 @@ const leetCodeResolver: TaskSourceResolver = {
       return { ok: false, reason: "invalid_input" }
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 900))
+    await new Promise((resolve) => setTimeout(resolve, MOCK_LEETCODE_RESOLVE_DELAY_MS))
 
     const match = /^\/problems\/([^/]+)\/?$/.exec(parsed.pathname)
     const slug = match?.[1] ?? ""
@@ -61,15 +64,13 @@ const leetCodeResolver: TaskSourceResolver = {
 
     const fullUrl = `https://leetcode.com/problems/${slug}/`
     const catalogTask = MOCK_REVIEW_TASKS.find((task) => task.url === fullUrl)
-    const fallbackDifficulty: Difficulty = "Medium"
-
     return {
       ok: true,
       draft: {
         source: "leetcode",
         name: catalogTask?.name ?? titleFromSlug(slug),
         url: fullUrl,
-        difficulty: catalogTask?.difficulty ?? fallbackDifficulty,
+        difficulty: catalogTask?.difficulty ?? LEETCODE_FALLBACK_DIFFICULTY,
         topics: catalogTask?.topics ?? [],
         notes: catalogTask?.notes ?? "",
         sourceMeta: {

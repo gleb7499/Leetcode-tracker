@@ -99,10 +99,10 @@ export function useTasks() {
       scheduleMode?: ScheduleMode;
       nextReviewAt?: string;
     }) => {
-      const normalizedScheduleMode = data.scheduleMode ?? 'today';
+      const effectiveScheduleMode = data.scheduleMode ?? 'today';
       const nextReview = data.nextReviewAt
         ? new Date(data.nextReviewAt).toISOString()
-        : getScheduledReviewDate(normalizedScheduleMode);
+        : getScheduledReviewDate(effectiveScheduleMode);
 
       const task: Task = {
         id: generateId('task'),
