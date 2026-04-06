@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LEETCODE_PROBLEM_PATH_REGEX, isLeetCodeHost } from '@/src/shared/tasks/leetcode-url';
 
 export const LoginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -35,6 +36,25 @@ export const TaskSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const LeetCodeTaskUrlSchema = z
+  .string()
+  .trim()
+  .min(1, 'LeetCode URL is required')
+  .url('Enter a valid URL')
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      const hasProblemPath = LEETCODE_PROBLEM_PATH_REGEX.test(url.pathname);
+      return isLeetCodeHost(url.hostname) && hasProblemPath;
+    } catch {
+      return false;
+    }
+  }, 'Enter a valid LeetCode problem URL');
+
+export const LeetCodeTaskUrlFormSchema = z.object({
+  url: LeetCodeTaskUrlSchema,
+});
+
 export const ForgotPasswordSchema = z.object({
   email: z.string().email('Enter a valid email'),
 });
@@ -42,4 +62,5 @@ export const ForgotPasswordSchema = z.object({
 export type LoginFormData = z.infer<typeof LoginSchema>;
 export type RegisterFormData = z.infer<typeof RegisterSchema>;
 export type TaskFormData = z.infer<typeof TaskSchema>;
+export type LeetCodeTaskUrlFormData = z.infer<typeof LeetCodeTaskUrlFormSchema>;
 export type ForgotPasswordFormData = z.infer<typeof ForgotPasswordSchema>;

@@ -1,5 +1,7 @@
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 export type ReviewStatus = 'forgot' | 'partial' | 'remember';
+export type TaskSource = 'leetcode' | 'custom';
+export type ScheduleMode = 'today' | 'tomorrow';
 
 export interface Review {
   date: string;
@@ -13,9 +15,26 @@ export interface Task {
   difficulty: Difficulty;
   topics: string[];
   notes: string;
+  source: TaskSource;
+  sourceMeta?: {
+    sourceTaskId?: string;
+    slug?: string;
+    catalogHit?: boolean;
+    [key: string]: string | number | boolean | undefined;
+  };
   createdAt: string;
   nextReview: string;
   reviews: Review[];
+}
+
+export interface ResolvedTaskDraft {
+  source: TaskSource;
+  name: string;
+  url: string;
+  difficulty: Difficulty;
+  topics: string[];
+  notes?: string;
+  sourceMeta?: Task['sourceMeta'];
 }
 
 export interface User {
