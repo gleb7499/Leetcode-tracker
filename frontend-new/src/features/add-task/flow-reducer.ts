@@ -8,6 +8,15 @@ export type AddTaskFlowStep =
   | "optional-note"
   | "success"
 
+export const ADD_TASK_FLOW_STEP_ORDER: AddTaskFlowStep[] = [
+  "source-select",
+  "leetcode-url",
+  "loading",
+  "solved-check",
+  "optional-note",
+  "success",
+]
+
 export interface AddTaskFlowState {
   step: AddTaskFlowStep
   source: TaskSource | null

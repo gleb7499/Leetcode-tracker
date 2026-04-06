@@ -101,10 +101,9 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={cn(
               "px-4 py-2.5 rounded-2xl font-medium transition-all duration-200",
-              "border",
               confirmVariant === "danger"
-                ? "bg-destructive/18 text-destructive border-destructive/30 hover:bg-destructive/24"
-                : "bg-primary/20 text-primary border-primary/35 hover:bg-primary/28",
+                ? "bg-destructive/18 text-destructive hover:bg-destructive/24"
+                : "bg-primary/20 text-primary hover:bg-primary/28",
             )}
           >
             {confirmLabel}
