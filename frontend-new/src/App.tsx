@@ -5,6 +5,8 @@ import { HomeView } from "@/components/home-view"
 import { ProfileMenu } from "@/components/profile-menu"
 import { SidePanel } from "@/components/side-panel"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { AddTaskFab } from "@/src/features/add-task/add-task-fab"
+import { AddTaskModal } from "@/src/features/add-task/add-task-modal"
 import type { PanelType } from "@/components/panels/panel-types"
 import { DESKTOP_SPLIT_CONTENT_RESERVE_CLASS } from "@/components/panels/split-layout"
 import { useDailyProgress } from "@/hooks/use-daily-progress"
@@ -13,6 +15,7 @@ import { useTasks } from "@/src/shared/hooks/useTasks"
 import type { Task } from "@/src/shared/types"
 import { type ReviewFeedback } from "@/lib/review-feedback"
 import type { ReviewStatus } from "@/src/shared/types"
+import type { ResolvedTaskDraft } from "@/src/shared/types"
 import { cn } from "@/lib/utils"
 
 type ViewState = "home" | "review" | "transitioning-to-review"
@@ -22,12 +25,13 @@ const TRANSITION_DURATION_MS = 400
 export default function App() {
   const navigate = useNavigate()
   const { currentUser, logout } = useAuth()
-  const { tasks, getTasksForToday, recordReview } = useTasks()
+  const { tasks, getTasksForToday, recordReview, addTask } = useTasks()
 
   const [view, setView] = useState<ViewState>("home")
   const [activePanel, setActivePanel] = useState<PanelType>(null)
   const [isSplitDesktop, setIsSplitDesktop] = useState(false)
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false)
   const [sessionTasks, setSessionTasks] = useState<Task[]>([])
 
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -40,8 +44,9 @@ export default function App() {
   }, [currentUser, navigate])
 
   const todayTasks = getTasksForToday()
-  const isReviewView = view === "review"
-  const isTransitioningToReview = view === "transitioning-to-review"
+  const safeView: ViewState | "home" = view === "review" && sessionTasks.length === 0 ? "home" : view
+  const isReviewView = safeView === "review"
+  const isTransitioningToReview = safeView === "transitioning-to-review"
   const isPanelOpen = !isReviewView && activePanel !== null
   const isDesktopPanelOpen = isPanelOpen && isSplitDesktop
 
@@ -110,6 +115,38 @@ export default function App() {
     setIsLogoutDialogOpen(false)
   }, [])
 
+  const handleOpenAddTask = useCallback(() => {
+    setIsAddTaskModalOpen(true)
+  }, [])
+
+  const handleCloseAddTask = useCallback(() => {
+    setIsAddTaskModalOpen(false)
+  }, [])
+
+  const handleSaveTaskFromFlow = useCallback(
+    ({
+      scheduleMode,
+      note,
+      draft,
+    }: {
+      scheduleMode: "today" | "tomorrow"
+      note?: string
+      draft: ResolvedTaskDraft
+    }) => {
+      addTask({
+        name: draft.name,
+        url: draft.url,
+        difficulty: draft.difficulty,
+        topics: draft.topics.join(", "),
+        notes: note?.trim() || draft.notes || "",
+        source: draft.source,
+        sourceMeta: draft.sourceMeta,
+        scheduleMode,
+      })
+    },
+    [addTask],
+  )
+
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)")
     const onChange = () => {
@@ -127,12 +164,6 @@ export default function App() {
       }
     }
   }, [])
-
-  useEffect(() => {
-    if (view === "review" && sessionTasks.length === 0) {
-      setView("home")
-    }
-  }, [view, sessionTasks.length])
 
   if (!currentUser) return null
 
@@ -160,6 +191,17 @@ export default function App() {
         onCancel={handleCancelLogout}
         confirmVariant="danger"
       />
+
+      {!isReviewView && (
+        <>
+          <AddTaskFab onClick={handleOpenAddTask} />
+          <AddTaskModal
+            isOpen={isAddTaskModalOpen}
+            onClose={handleCloseAddTask}
+            onSaveTask={handleSaveTaskFromFlow}
+          />
+        </>
+      )}
 
       {/* Content */}
       {isReviewView ? (
