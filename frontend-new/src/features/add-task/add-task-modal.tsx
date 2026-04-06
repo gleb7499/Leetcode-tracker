@@ -25,18 +25,25 @@ interface AddTaskModalProps {
   }) => void
 }
 
+const FOCUSABLE_SELECTOR = [
+  "button:not([disabled])",
+  "a[href]",
+  "input:not([disabled])",
+  "textarea:not([disabled])",
+  "select:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",")
+
 function getFocusable(container: HTMLElement): HTMLElement[] {
-  const selector = [
-    "button:not([disabled])",
-    "a[href]",
-    "input:not([disabled])",
-    "textarea:not([disabled])",
-    "select:not([disabled])",
-    "[tabindex]:not([tabindex='-1'])",
-  ].join(",")
-  return Array.from(container.querySelectorAll<HTMLElement>(selector)).filter(
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
     (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1,
   )
+}
+
+function getLeetCodeUrlError(value: string): string | undefined {
+  const result = LeetCodeTaskUrlSchema.safeParse(value)
+  if (result.success) return undefined
+  return result.error.issues[0]?.message ?? "Enter a valid LeetCode problem URL"
 }
 
 export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps) {
@@ -102,12 +109,6 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
   }, [isOpen, handleClose])
 
   if (!isOpen) return null
-
-  const validateUrl = (value: string): string | undefined => {
-    const result = LeetCodeTaskUrlSchema.safeParse(value)
-    if (result.success) return undefined
-    return result.error.issues[0]?.message ?? "Enter a valid LeetCode problem URL"
-  }
 
   const handleSubmitLeetCodeUrl = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -219,7 +220,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                   onBlur={() =>
                     dispatch({
                       type: "SET_LEETCODE_URL_ERROR",
-                      error: validateUrl(state.leetCodeUrl),
+                      error: getLeetCodeUrlError(state.leetCodeUrl),
                     })
                   }
                   placeholder="https://leetcode.com/problems/two-sum/"

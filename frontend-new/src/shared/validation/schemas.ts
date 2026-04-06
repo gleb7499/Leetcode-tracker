@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LEETCODE_PROBLEM_PATH_REGEX, isLeetCodeHost } from '@/src/shared/tasks/leetcode-url';
 
 export const LoginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -43,10 +44,8 @@ export const LeetCodeTaskUrlSchema = z
   .refine((value) => {
     try {
       const url = new URL(value);
-      const isLeetCodeHost =
-        url.hostname === 'leetcode.com' || url.hostname === 'www.leetcode.com';
-      const hasProblemPath = /^\/problems\/[^/]+\/?$/.test(url.pathname);
-      return isLeetCodeHost && hasProblemPath;
+      const hasProblemPath = LEETCODE_PROBLEM_PATH_REGEX.test(url.pathname);
+      return isLeetCodeHost(url.hostname) && hasProblemPath;
     } catch {
       return false;
     }

@@ -1,5 +1,6 @@
 import type { Difficulty, ResolvedTaskDraft, TaskSource } from "@/src/shared/types"
 import { MOCK_REVIEW_TASKS } from "@/data/review-tasks"
+import { LEETCODE_PROBLEM_PATH_REGEX, isLeetCodeHost } from "@/src/shared/tasks/leetcode-url"
 
 interface ResolveTaskInput {
   source: TaskSource
@@ -23,15 +24,15 @@ export interface TaskSourceResolver {
   resolve: (input: string) => Promise<ResolveTaskResult>
 }
 
-const MOCK_LEETCODE_RESOLVE_DELAY_MS = 900
+const LEETCODE_RESOLVE_SIMULATION_DELAY_MS = 900
 const LEETCODE_FALLBACK_DIFFICULTY: Difficulty = "Medium"
 
 function normalizeLeetCodeUrl(input: string): URL | null {
   try {
     const parsed = new URL(input.trim())
     const host = parsed.hostname.toLowerCase()
-    if (host !== "leetcode.com" && host !== "www.leetcode.com") return null
-    if (!/^\/problems\/[^/]+\/?$/.test(parsed.pathname)) return null
+    if (!isLeetCodeHost(host)) return null
+    if (!LEETCODE_PROBLEM_PATH_REGEX.test(parsed.pathname)) return null
     return parsed
   } catch {
     return null
@@ -54,7 +55,7 @@ const leetCodeResolver: TaskSourceResolver = {
       return { ok: false, reason: "invalid_input" }
     }
 
-    await new Promise((resolve) => setTimeout(resolve, MOCK_LEETCODE_RESOLVE_DELAY_MS))
+    await new Promise((resolve) => setTimeout(resolve, LEETCODE_RESOLVE_SIMULATION_DELAY_MS))
 
     const match = /^\/problems\/([^/]+)\/?$/.exec(parsed.pathname)
     const slug = match?.[1] ?? ""

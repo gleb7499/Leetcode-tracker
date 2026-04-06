@@ -203,7 +203,7 @@ export default function App() {
       )}
 
       {/* Content */}
-      {isReviewView ? (
+      {isReviewView && sessionTasks.length > 0 ? (
         <ReviewSession
           tasks={sessionTasks}
           onReviewFeedback={handleReviewFeedback}
