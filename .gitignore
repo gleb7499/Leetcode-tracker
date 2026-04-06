@@ -65,6 +65,7 @@ bin/
 # Dependencies
 node_modules/
 jspm_packages/
+.playwright-mcp/
 
 # Logs
 npm-debug.log*
