@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Mail } from "@/src/shared/resources/icons"
+import { useAuth } from "@/src/shared/hooks/useAuth"
 import { AuthSubmitButton } from "./AuthSubmitButton"
 import { cn } from "@/lib/utils"
 
@@ -25,8 +26,17 @@ export function EmailVerificationPage() {
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const navigate = useNavigate()
-  const location = useLocation()
-  const email = (location.state as { email?: string } | null)?.email ?? ""
+  const {
+    pendingVerification,
+    verifyEmailCode,
+    resendEmailVerificationCode,
+    cancelPendingVerification,
+    isProcessing,
+    testVerificationCodeHint,
+  } = useAuth()
+
+  const email = pendingVerification?.email ?? ""
+  const isRegisterVerification = pendingVerification?.flow === "register"
 
   // Focus first cell on mount
   useEffect(() => {
@@ -151,12 +161,20 @@ export function EmailVerificationPage() {
     setPhase("submitting")
     setErrorMessage(null)
 
-    // Simulate backend verification (POST /api/auth/verify-email { email, code })
-    await new Promise((r) => setTimeout(r, 900))
+    const result = await verifyEmailCode(code)
+    if (!result.success) {
+      setPhase("error")
+      setErrorMessage(result.message)
+      triggerShake()
+      const redirectRoute = result.nextRoute
+      if (redirectRoute) {
+        setTimeout(() => navigate(redirectRoute, { replace: true }), 500)
+      }
+      return
+    }
 
-    // Mock: accept any 6-digit code; real validation happens on the backend
     setPhase("success")
-    setTimeout(() => navigate("/", { replace: true }), 700)
+    setTimeout(() => navigate(result.nextRoute ?? "/", { replace: true }), 700)
   }
 
   const startCooldown = useCallback(() => {
@@ -175,25 +193,43 @@ export function EmailVerificationPage() {
 
   const handleResend = useCallback(async () => {
     if (resendCooldown > 0) return
-    // Reset form state
+
+    const result = await resendEmailVerificationCode()
+    if (!result.success) {
+      setPhase("error")
+      setErrorMessage(result.message)
+      triggerShake()
+      const redirectRoute = result.nextRoute
+      if (redirectRoute) {
+        setTimeout(() => navigate(redirectRoute, { replace: true }), 500)
+      }
+      return
+    }
+
     setDigits(Array(CODE_LENGTH).fill(""))
     setPhase("idle")
     setErrorMessage(null)
     focusCell(0)
     startCooldown()
-    // Mock: simulate backend sending a new code (POST /api/auth/resend-verification { email })
-  }, [resendCooldown, focusCell, startCooldown])
+  }, [
+    resendCooldown,
+    resendEmailVerificationCode,
+    focusCell,
+    startCooldown,
+    navigate,
+    triggerShake,
+  ])
+
+  const handleUseDifferentEmail = useCallback(() => {
+    cancelPendingVerification()
+    navigate("/login", { replace: true })
+  }, [cancelPendingVerification, navigate])
 
   const isFilled = digits.every((d) => d !== "")
-  const isSubmitting = phase === "submitting"
+  const isSubmitting = phase === "submitting" || isProcessing
   const isSuccess = phase === "success"
   const isError = phase === "error"
   const isDisabled = isSubmitting || isSuccess
-
-  // Trigger shake when error phase begins
-  useEffect(() => {
-    if (isError) triggerShake()
-  }, [isError, triggerShake])
 
   return (
     <div
@@ -212,12 +248,34 @@ export function EmailVerificationPage() {
           <p className="text-muted-foreground mt-2 text-sm">
             We sent a 6-digit verification code to
           </p>
-          {email ? (
-            <p className="text-foreground font-medium text-sm mt-1 break-all">{email}</p>
-          ) : (
-            <p className="text-muted-foreground text-sm mt-1">your email address</p>
-          )}
+
+          <div className="mt-1 flex items-center justify-center gap-2">
+            {email ? (
+              <p className="text-foreground font-medium text-sm break-all">{email}</p>
+            ) : (
+              <p className="text-muted-foreground text-sm">your email address</p>
+            )}
+            <button
+              type="button"
+              onClick={handleUseDifferentEmail}
+              className="text-xs text-primary hover:opacity-75 transition-opacity"
+            >
+              Use different email
+            </button>
+          </div>
         </div>
+
+        {isRegisterVerification && (
+          <div className="mb-4 py-3 px-4 rounded-xl text-sm bg-primary/10 text-primary border border-primary/20">
+            Your account is not active yet. Verify your email to finish registration.
+          </div>
+        )}
+
+        {testVerificationCodeHint && (
+          <div className="mb-4 py-3 px-4 rounded-xl text-sm bg-accent/10 text-accent border border-accent/20">
+            Test mode enabled for this account. Use code {testVerificationCodeHint}.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
           {/* 6 squircle digit cells */}

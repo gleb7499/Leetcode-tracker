@@ -77,7 +77,9 @@ pnpm-debug.log*
 # Environment variables (may contain secrets!)
 .env
 .env.*
+!.env.example
 !.env.*.example
+!frontend/.env.example
 
 # Build outputs
 dist/

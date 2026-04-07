@@ -21,20 +21,22 @@ export function LoginPage() {
   const [activeTab, setActiveTab] = useState<Tab>("login")
   const [panelHeight, setPanelHeight] = useState<number | null>(null)
 
-  const { login, register, isProcessing, currentUser } = useAuth()
+  const { login, register, isProcessing, currentUser, pendingVerification } = useAuth()
   const navigate = useNavigate()
 
   const loginPanelRef = useRef<HTMLDivElement | null>(null)
   const registerPanelRef = useRef<HTMLDivElement | null>(null)
-  // Prevents the "already-authenticated" redirect from firing right after a
-  // fresh login, which would race against the explicit navigate to /verify-email.
-  const pendingVerifyRef = useRef(false)
 
   useEffect(() => {
-    if (currentUser && !pendingVerifyRef.current) {
+    if (currentUser) {
       navigate("/", { replace: true })
+      return
     }
-  }, [currentUser, navigate])
+
+    if (pendingVerification) {
+      navigate("/verify-email", { replace: true })
+    }
+  }, [currentUser, pendingVerification, navigate])
 
   const updatePanelHeight = useCallback(() => {
     const activePanel = activeTab === "login" ? loginPanelRef.current : registerPanelRef.current
@@ -57,28 +59,22 @@ export function LoginPage() {
     return () => observer.disconnect()
   }, [updatePanelHeight])
 
-  // Only block rendering for already-authenticated users (pre-existing session).
-  // When pendingVerifyRef is true the user just logged in and is about to be
-  // redirected to /verify-email; we keep rendering so the success message stays
-  // visible during the 800 ms delay before navigation fires.
-  if (currentUser && !pendingVerifyRef.current) return null
+  if (currentUser || pendingVerification) return null
 
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     const result = await login(email, password, remember)
-    if (result.success) {
-      pendingVerifyRef.current = true
-      setTimeout(
-        () => navigate("/verify-email", { state: { email }, replace: true }),
-        800,
-      )
+    const nextRoute = result.nextRoute
+    if (result.success && nextRoute) {
+      setTimeout(() => navigate(nextRoute, { replace: true }), 800)
     }
     return result
   }
 
   const handleRegister = async (name: string, email: string, password: string) => {
     const result = await register(name, email, password)
-    if (result.success) {
-      setTimeout(() => navigate("/", { replace: true }), 800)
+    const nextRoute = result.nextRoute
+    if (result.success && nextRoute) {
+      setTimeout(() => navigate(nextRoute, { replace: true }), 800)
     }
     return result
   }
