@@ -72,6 +72,13 @@ export const ForgotPasswordSchema = z.object({
   email: z.string().email('Enter a valid email'),
 });
 
+export const EmailVerificationSchema = z.object({
+  code: z
+    .string()
+    .length(6, 'Enter the 6-digit code')
+    .regex(/^\d{6}$/, 'Code must be 6 digits'),
+});
+
 export type LoginFormData = z.infer<typeof LoginSchema>;
 export type RegisterFormData = z.infer<typeof RegisterSchema>;
 export type TaskFormData = z.infer<typeof TaskSchema>;
