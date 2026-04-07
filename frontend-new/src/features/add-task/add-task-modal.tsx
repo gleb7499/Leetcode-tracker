@@ -105,6 +105,9 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
     onClose()
   }, [onClose])
 
+  // This effect mirrors external open/close control into local animation lifecycle state.
+  // The transitions are intentional and run in a bounded sequence with timer cleanup.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isOpen) {
       setIsMounted(true)
@@ -126,7 +129,11 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
 
     return () => window.clearTimeout(closeTimer)
   }, [isMounted, isOpen])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  // This effect coordinates animated step transitions and temporary viewport sizing.
+  // State updates are required to orchestrate enter/exit phases and are cleared by timers.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (state.step === visibleStep) return
 
@@ -155,6 +162,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
       stepTransitionTimerRef.current = null
     }, CONTENT_SWITCH_ANIMATION_MS)
   }, [state.step, visibleStep])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useLayoutEffect(() => {
     if (!isContentHeightAnimating) return
