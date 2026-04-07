@@ -12,6 +12,7 @@ import { resolveTaskDraft } from "@/src/shared/tasks/resolve-task"
 import { searchTopicsForSource } from "@/src/shared/tasks/topic-search-provider"
 import { TaskDifficultyPill } from "@/src/shared/components/task-difficulty-pill"
 import { TaskTopicChip } from "@/src/shared/components/task-topic-chip"
+import { FieldErrorMessage } from "@/src/shared/components/field-error-message"
 import {
   type AddTaskFlowStep,
   ADD_TASK_FLOW_STEP_ORDER,
@@ -162,6 +163,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
   const [activeTopicSuggestionTopic, setActiveTopicSuggestionTopic] = useState<string | null>(null)
   const [removingManualTopics, setRemovingManualTopics] = useState<Set<string>>(new Set())
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const contentViewportRef = useRef<HTMLElement | null>(null)
   const activeStepRef = useRef<HTMLDivElement | null>(null)
   const topicSuggestionItemRefs = useRef(new Map<string, HTMLButtonElement>())
   const topicSuggestionOffsetsRef = useRef(new Map<string, number>())
@@ -177,6 +179,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
   const isClosingRef = useRef(false)
   const stepTransitionTimerRef = useRef<number | null>(null)
   const stepHeightRafRef = useRef<number | null>(null)
+  const contentResizeTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     isOpenRef.current = isOpen
@@ -498,6 +501,65 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
     }
   }, [isContentHeightAnimating, visibleStep])
 
+  useLayoutEffect(() => {
+    if (!isMounted || leavingStep) return
+    if (typeof ResizeObserver === "undefined") return
+
+    const viewport = contentViewportRef.current
+    const activeStep = activeStepRef.current
+    if (!viewport || !activeStep) return
+
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    let rafId: number | null = null
+
+    const observer = new ResizeObserver((entries) => {
+      if (prefersReducedMotion) return
+
+      const nextHeight = entries[0]?.contentRect.height
+      if (typeof nextHeight !== "number" || nextHeight <= 0) return
+
+      const currentHeight = viewport.getBoundingClientRect().height
+      if (Math.abs(nextHeight - currentHeight) < 1) return
+
+      setIsContentHeightAnimating(true)
+      setContentViewportHeight(currentHeight)
+
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId)
+      }
+
+      rafId = window.requestAnimationFrame(() => {
+        setContentViewportHeight(nextHeight)
+
+        if (contentResizeTimerRef.current) {
+          window.clearTimeout(contentResizeTimerRef.current)
+        }
+
+        contentResizeTimerRef.current = window.setTimeout(() => {
+          if (!stepTransitionTimerRef.current) {
+            setIsContentHeightAnimating(false)
+            setContentViewportHeight(null)
+          }
+          contentResizeTimerRef.current = null
+        }, 280)
+
+        rafId = null
+      })
+    })
+
+    observer.observe(activeStep)
+
+    return () => {
+      observer.disconnect()
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId)
+      }
+    }
+  }, [isMounted, leavingStep, visibleStep])
+
   useEffect(() => {
     const manualTopicRemovalTimers = manualTopicRemovalTimersRef.current
 
@@ -507,6 +569,9 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
       }
       if (stepHeightRafRef.current) {
         window.cancelAnimationFrame(stepHeightRafRef.current)
+      }
+      if (contentResizeTimerRef.current) {
+        window.clearTimeout(contentResizeTimerRef.current)
       }
       for (const timerId of manualTopicRemovalTimers.values()) {
         window.clearTimeout(timerId)
@@ -792,12 +857,8 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                   state.leetCodeUrlError ? "ring-2 ring-destructive/60" : "focus:ring-primary/50",
                 )}
               />
-              {state.leetCodeUrlError && (
-                <p className="mt-1.5 text-xs text-destructive">{state.leetCodeUrlError}</p>
-              )}
-              {state.resolveError && (
-                <p className="mt-1.5 text-xs text-destructive">{state.resolveError}</p>
-              )}
+                <FieldErrorMessage message={state.leetCodeUrlError} />
+                <FieldErrorMessage message={state.resolveError} />
             </div>
 
             <div className="flex items-center justify-between gap-3">
@@ -858,9 +919,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                     : "focus:ring-primary/50",
                 )}
               />
-              {state.manualDetails.errors.name && (
-                <p className="mt-1.5 text-xs text-destructive">{state.manualDetails.errors.name}</p>
-              )}
+              <FieldErrorMessage message={state.manualDetails.errors.name} />
             </div>
 
             <div>
@@ -898,11 +957,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                   })}
                 </div>
               </div>
-              {state.manualDetails.errors.difficulty && (
-                <p className="mt-1.5 text-xs text-destructive">
-                  {state.manualDetails.errors.difficulty}
-                </p>
-              )}
+              <FieldErrorMessage message={state.manualDetails.errors.difficulty} />
             </div>
 
             <div>
@@ -1011,9 +1066,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                 </div>
               </div>
 
-              {state.manualDetails.errors.topics && (
-                <p className="mt-1.5 text-xs text-destructive">{state.manualDetails.errors.topics}</p>
-              )}
+              <FieldErrorMessage message={state.manualDetails.errors.topics} />
 
               {state.manualDetails.topics.length > 0 && (
                 <div ref={manualTopicListViewportRef} className="manual-topics-list-viewport mt-3">
@@ -1208,6 +1261,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
           </header>
 
           <section
+            ref={contentViewportRef}
             className="relative overflow-hidden modal-flow-viewport"
             aria-live="polite"
             style={

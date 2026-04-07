@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Eye, EyeOff, Mail, Lock, User } from "@/src/shared/resources/icons"
 import { RegisterSchema } from "@/src/shared/validation/schemas"
+import { FieldErrorMessage } from "@/src/shared/components/field-error-message"
 import { PasswordStrength } from "./PasswordStrength"
 import { cn } from "@/lib/utils"
 import { AuthSubmitButton } from "./AuthSubmitButton"
@@ -103,7 +104,7 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
             className={cn(inputClass(errors.name), "pl-10 pr-4")}
           />
         </div>
-        {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>}
+        <FieldErrorMessage message={errors.name} />
       </div>
 
       <div>
@@ -120,7 +121,7 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
             className={cn(inputClass(errors.email), "pl-10 pr-4")}
           />
         </div>
-        {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
+        <FieldErrorMessage message={errors.email} />
       </div>
 
       <div>
@@ -145,7 +146,7 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        {errors.password && <p className="mt-1.5 text-xs text-destructive">{errors.password}</p>}
+        <FieldErrorMessage message={errors.password} />
         <PasswordStrength password={password} />
       </div>
 
@@ -173,9 +174,7 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
             {showPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        {errors.passwordConfirm && (
-          <p className="mt-1.5 text-xs text-destructive">{errors.passwordConfirm}</p>
-        )}
+        <FieldErrorMessage message={errors.passwordConfirm} />
       </div>
 
       <label className="flex items-start gap-2.5 cursor-pointer select-none">
@@ -196,7 +195,7 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
           </button>
         </span>
       </label>
-      {errors.terms && <p className="-mt-2 text-xs text-destructive">{errors.terms}</p>}
+      <FieldErrorMessage message={errors.terms} className="field-error-message--terms" />
 
       {message && (
         <div

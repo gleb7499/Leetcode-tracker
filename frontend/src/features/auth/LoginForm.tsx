@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Eye, EyeOff, Mail, Lock } from "@/src/shared/resources/icons"
 import { LoginSchema, type LoginFormData } from "@/src/shared/validation/schemas"
+import { FieldErrorMessage } from "@/src/shared/components/field-error-message"
 import { cn } from "@/lib/utils"
 import { AuthSubmitButton } from "./AuthSubmitButton"
 
@@ -71,7 +72,7 @@ export function LoginForm({ onLogin, isProcessing }: LoginFormProps) {
             )}
           />
         </div>
-        {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
+        <FieldErrorMessage message={errors.email} />
       </div>
 
       <div>
@@ -99,7 +100,7 @@ export function LoginForm({ onLogin, isProcessing }: LoginFormProps) {
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        {errors.password && <p className="mt-1.5 text-xs text-destructive">{errors.password}</p>}
+        <FieldErrorMessage message={errors.password} />
       </div>
 
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
