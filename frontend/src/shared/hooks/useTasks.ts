@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { storage } from '../utils/storage';
 import { generateId, parseStringToArray } from '../utils/helpers';
-import type { Task, ReviewStatus, Difficulty } from '../types';
+import type { Task, ReviewStatus, Difficulty, ScheduleMode, TaskSource } from '../types';
 
 const STORAGE_KEY = 'leetcode-tracker-tasks';
 
@@ -19,7 +19,8 @@ function initDemoData(): Task[] {
       url: 'https://leetcode.com/problems/two-sum/',
       difficulty: 'Easy',
       topics: ['Array', 'Hash Table'],
-      notes: 'Классическая задача на HashMap. Проход за O(n).',
+      notes: 'Classic HashMap problem. One pass O(n).',
+      source: 'leetcode',
       createdAt: new Date().toISOString(),
       nextReview: new Date().toISOString(),
       reviews: [],
@@ -30,7 +31,8 @@ function initDemoData(): Task[] {
       url: 'https://leetcode.com/problems/add-two-numbers/',
       difficulty: 'Medium',
       topics: ['Linked List', 'Math', 'Recursion'],
-      notes: 'Сложение чисел в обратном порядке через списки.',
+      notes: 'Add numbers in reverse order using linked lists.',
+      source: 'leetcode',
       createdAt: new Date().toISOString(),
       nextReview: new Date().toISOString(),
       reviews: [],
@@ -41,7 +43,8 @@ function initDemoData(): Task[] {
       url: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
       difficulty: 'Hard',
       topics: ['Array', 'Binary Search', 'Divide and Conquer'],
-      notes: 'Бинарный поиск по меньшему массиву. Сложная задача!',
+      notes: 'Binary search on the smaller array. Challenging problem!',
+      source: 'leetcode',
       createdAt: new Date().toISOString(),
       nextReview: new Date().toISOString(),
       reviews: [],
@@ -53,6 +56,14 @@ function calculateNextReview(status: ReviewStatus): string {
   const days = REVIEW_INTERVALS[status] ?? 1;
   const date = new Date();
   date.setDate(date.getDate() + days);
+  return date.toISOString();
+}
+
+function getScheduledReviewDate(scheduleMode: ScheduleMode): string {
+  const date = new Date();
+  if (scheduleMode === 'tomorrow') {
+    date.setDate(date.getDate() + 1);
+  }
   return date.toISOString();
 }
 
@@ -83,7 +94,16 @@ export function useTasks() {
       difficulty: Difficulty;
       topics: string;
       notes: string;
+      source?: TaskSource;
+      sourceMeta?: Task['sourceMeta'];
+      scheduleMode?: ScheduleMode;
+      nextReviewAt?: string;
     }) => {
+      const effectiveScheduleMode = data.scheduleMode ?? 'today';
+      const nextReview = data.nextReviewAt
+        ? new Date(data.nextReviewAt).toISOString()
+        : getScheduledReviewDate(effectiveScheduleMode);
+
       const task: Task = {
         id: generateId('task'),
         name: data.name.trim(),
@@ -91,8 +111,10 @@ export function useTasks() {
         difficulty: data.difficulty,
         topics: parseStringToArray(data.topics),
         notes: data.notes.trim(),
+        source: data.source ?? 'leetcode',
+        sourceMeta: data.sourceMeta,
         createdAt: new Date().toISOString(),
-        nextReview: new Date().toISOString(),
+        nextReview,
         reviews: [],
       };
       const updated = [...tasks, task];

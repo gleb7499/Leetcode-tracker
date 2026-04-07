@@ -1,6 +1,6 @@
 ## Plan: FAB Add Task Happy Path
 
-Добавляем новый flow добавления задачи через плавающую кнопку в правом нижнем углу и модальный overlay, не ломая текущую архитектуру frontend-new. Первая итерация покрывает только LeetCode happy-path, но внутренняя структура сразу делается source-driven (для будущих custom/codewars и API).
+Добавляем новый flow добавления задачи через плавающую кнопку в правом нижнем углу и модальный overlay, не ломая текущую архитектуру frontend. Первая итерация покрывает только LeetCode happy-path, но внутренняя структура сразу делается source-driven (для будущих custom/codewars и API).
 
 **Steps**
 1. Phase 1 — Domain foundation (*блокирует последующие UI/flow шаги*):
@@ -35,21 +35,21 @@
 3. Прогнать typecheck/lint/tests и выполнить ручной UX smoke-test всех переходов и анимаций на desktop/mobile.
 
 **Relevant files**
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/src/App.tsx — точка интеграции FAB и modal flow, условия видимости по состоянию `view`.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/components/profile-menu.tsx — референс для floating-button стиля, easing и поведения.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/components/confirm-dialog.tsx — референс portal/backdrop/scroll-lock/close semantics.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/src/features/auth/LoginForm.tsx — источник визуального паттерна валидации ошибок.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/src/shared/validation/schemas.ts — расширение URL-валидации под source-aware подход.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/src/shared/hooks/useTasks.ts — расширение addTask-контракта и правила `nextReview`.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/src/shared/types/index.ts — расширение типов задачи под источник/метаданные.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/src/index.css — новые анимации loader/FAB/modal и токены цветов.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/data/review-tasks.ts — временный источник metadata для локального happy-path resolve.
-- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend-new/hooks/use-daily-progress.ts — возможная синхронизация daily target после add flow.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/src/App.tsx — точка интеграции FAB и modal flow, условия видимости по состоянию `view`.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/components/profile-menu.tsx — референс для floating-button стиля, easing и поведения.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/components/confirm-dialog.tsx — референс portal/backdrop/scroll-lock/close semantics.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/src/features/auth/LoginForm.tsx — источник визуального паттерна валидации ошибок.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/src/shared/validation/schemas.ts — расширение URL-валидации под source-aware подход.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/src/shared/hooks/useTasks.ts — расширение addTask-контракта и правила `nextReview`.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/src/shared/types/index.ts — расширение типов задачи под источник/метаданные.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/src/index.css — новые анимации loader/FAB/modal и токены цветов.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/data/review-tasks.ts — временный источник metadata для локального happy-path resolve.
+- c:/Users/kseni/Documents/Leetcode/Leetcode tracker/Leetcode-tracker/frontend/hooks/use-daily-progress.ts — возможная синхронизация daily target после add flow.
 
 **Verification**
-1. Запустить `npm run typecheck` в frontend-new.
-2. Запустить `npm run lint` в frontend-new.
-3. Запустить `npm run test` в frontend-new.
+1. Запустить `npm run typecheck` в frontend.
+2. Запустить `npm run lint` в frontend.
+3. Запустить `npm run test` в frontend.
 4. Ручной happy-path A (LeetCode + “не решил”): открыть FAB на home → URL valid → loader → “не решил” → success “сегодня” → закрытие по `X` и по backdrop.
 5. Ручной happy-path B (LeetCode + “решил”): URL valid → loader → “решил” → note → success “завтра” → проверить, что задача не попала в `getTasksForToday` на текущую дату.
 6. Проверить клавиатурную доступность: `Escape`, focus trap/return focus, `aria` для dialog.

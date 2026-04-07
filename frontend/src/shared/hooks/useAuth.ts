@@ -41,19 +41,19 @@ export function useAuth() {
 
       if (!user) {
         setIsProcessing(false);
-        return { success: false, message: 'Пользователь с таким email не найден' };
+        return { success: false, message: 'No user found with this email' };
       }
 
       const valid = await cryptoHelper.verifyPassword(password, user.passwordHash);
       if (!valid) {
         setIsProcessing(false);
-        return { success: false, message: 'Неверный пароль' };
+        return { success: false, message: 'Invalid password' };
       }
 
       createSession(user, remember);
       setCurrentUser({ id: user.id, email: user.email, name: user.name });
       setIsProcessing(false);
-      return { success: true, message: `Добро пожаловать, ${user.name}!` };
+      return { success: true, message: `Welcome, ${user.name}!` };
     },
     [],
   );
@@ -73,7 +73,7 @@ export function useAuth() {
         setIsProcessing(false);
         return {
           success: false,
-          message: 'Пользователь с таким email уже зарегистрирован',
+          message: 'A user with this email is already registered',
         };
       }
 
@@ -92,7 +92,7 @@ export function useAuth() {
       createSession(user, true);
       setCurrentUser({ id: user.id, email: user.email, name: user.name });
       setIsProcessing(false);
-      return { success: true, message: 'Регистрация успешна!' };
+      return { success: true, message: 'Registration successful!' };
     },
     [],
   );

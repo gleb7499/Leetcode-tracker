@@ -1,196 +1,245 @@
-import { useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AppHeader } from './components/Header/AppHeader';
-import { AppNav } from './components/Navigation/AppNav';
-import { AppFooter } from './components/Footer/AppFooter';
-import { HomePage } from './pages/HomePage/HomePage';
-import { AddTaskPage } from './pages/AddTaskPage/AddTaskPage';
-import { ReviewPage } from './pages/ReviewPage/ReviewPage';
-import { StatsPage } from './pages/StatsPage/StatsPage';
-import { SettingsPage } from './pages/SettingsPage/SettingsPage';
-import { useAuth } from './shared/hooks/useAuth';
-import { useTasks } from './shared/hooks/useTasks';
-import { useState } from 'react';
-import type { Screen } from './shared/types';
-import type { ReviewStatus, Difficulty } from './shared/types';
+import { useState, useCallback, useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
+import { ReviewSession } from "@/components/review-session"
+import { HomeView } from "@/components/home-view"
+import { ProfileMenu } from "@/components/profile-menu"
+import { SidePanel } from "@/components/side-panel"
+import { ConfirmDialog } from "@/components/confirm-dialog"
+import { AddTaskFab } from "@/src/features/add-task/add-task-fab"
+import { AddTaskModal } from "@/src/features/add-task/add-task-modal"
+import type { PanelType } from "@/components/panels/panel-types"
+import { DESKTOP_SPLIT_CONTENT_RESERVE_CLASS } from "@/components/panels/split-layout"
+import { useDailyProgress } from "@/hooks/use-daily-progress"
+import { useAuth } from "@/src/shared/hooks/useAuth"
+import { useTasks } from "@/src/shared/hooks/useTasks"
+import type { Task } from "@/src/shared/types"
+import { type ReviewFeedback } from "@/lib/review-feedback"
+import type { ReviewStatus } from "@/src/shared/types"
+import type { ResolvedTaskDraft } from "@/src/shared/types"
+import { cn } from "@/lib/utils"
+
+type ViewState = "home" | "review" | "transitioning-to-review"
+
+const TRANSITION_DURATION_MS = 400
 
 export default function App() {
-  const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
-  const { getTasksForToday, addTask, deleteTask, recordReview, getTaskById } = useTasks();
+  const navigate = useNavigate()
+  const { currentUser, logout } = useAuth()
+  const { tasks, getTasksForToday, recordReview, addTask } = useTasks()
 
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const [reviewTaskId, setReviewTaskId] = useState<string | null>(null);
-  const [reviewQueue, setReviewQueue] = useState<string[]>([]);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [view, setView] = useState<ViewState>("home")
+  const [activePanel, setActivePanel] = useState<PanelType>(null)
+  const [isSplitDesktop, setIsSplitDesktop] = useState(false)
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false)
+  const [sessionTasks, setSessionTasks] = useState<Task[]>([])
 
-  // Redirect if not authenticated
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!currentUser) {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true })
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate])
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && currentScreen !== 'home') {
-        setCurrentScreen('home');
-      }
-      if (e.altKey) {
-        const map: Record<string, Screen> = {
-          '1': 'home',
-          '2': 'add',
-          '3': 'stats',
-          '4': 'settings',
-        };
-        if (map[e.key]) {
-          e.preventDefault();
-          setCurrentScreen(map[e.key]);
-        }
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [currentScreen]);
+  const todayTasks = getTasksForToday()
+  const isReviewView = view === "review"
+  const isTransitioningToReview = view === "transitioning-to-review"
+  const isPanelOpen = !isReviewView && activePanel !== null
+  const isDesktopPanelOpen = isPanelOpen && isSplitDesktop
 
-  // Auto-hide notification
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 3000);
-      return () => clearTimeout(timer);
+  const {
+    todayProgress,
+    todayTotal,
+    todayRemaining,
+    incrementCompleted,
+  } = useDailyProgress(todayTasks.length)
+
+  const scheduleTransition = useCallback((nextView: Exclude<ViewState, "transitioning-to-review">) => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current)
     }
-  }, [notification]);
+    transitionTimerRef.current = setTimeout(() => {
+      setView(nextView)
+    }, TRANSITION_DURATION_MS)
+  }, [])
+
+  const handleStartSession = useCallback(() => {
+    const fresh = getTasksForToday()
+
+    if (todayRemaining <= 0 || fresh.length === 0) {
+      return
+    }
+
+    setSessionTasks(fresh)
+    setActivePanel(null)
+    setView("transitioning-to-review")
+    scheduleTransition("review")
+  }, [todayRemaining, getTasksForToday, scheduleTransition])
+
+  const handleReviewFeedback = useCallback(
+    (taskId: string, feedback: ReviewFeedback) => {
+      recordReview(taskId, feedback as ReviewStatus)
+      incrementCompleted()
+    },
+    [recordReview, incrementCompleted],
+  )
+
+  const handleEndSession = useCallback(() => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current)
+      transitionTimerRef.current = null
+    }
+    setSessionTasks([])
+    setView("home")
+  }, [])
+
+  const handlePanelChange = useCallback((panel: PanelType) => {
+    setActivePanel(panel)
+  }, [])
 
   const handleLogout = useCallback(() => {
-    if (window.confirm('Вы уверены, что хотите выйти?')) {
-      logout();
-      navigate('/login', { replace: true });
+    setIsLogoutDialogOpen(false)
+    setActivePanel(null)
+    logout()
+    navigate("/login", { replace: true })
+  }, [logout, navigate])
+
+  const handleRequestLogout = useCallback(() => {
+    setIsLogoutDialogOpen(true)
+  }, [])
+
+  const handleCancelLogout = useCallback(() => {
+    setIsLogoutDialogOpen(false)
+  }, [])
+
+  const handleOpenAddTask = useCallback(() => {
+    setIsAddTaskModalOpen(true)
+  }, [])
+
+  const handleCloseAddTask = useCallback(() => {
+    setIsAddTaskModalOpen(false)
+  }, [])
+
+  const handleSaveTaskFromFlow = useCallback(
+    ({
+      scheduleMode,
+      note,
+      draft,
+    }: {
+      scheduleMode: "today" | "tomorrow"
+      note?: string
+      draft: ResolvedTaskDraft
+    }) => {
+      addTask({
+        name: draft.name,
+        url: draft.url,
+        difficulty: draft.difficulty,
+        topics: draft.topics.join(", "),
+        notes: note?.trim() || draft.notes || "",
+        source: draft.source,
+        sourceMeta: draft.sourceMeta,
+        scheduleMode,
+      })
+    },
+    [addTask],
+  )
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)")
+    const onChange = () => {
+      setIsSplitDesktop(mql.matches)
     }
-  }, [logout, navigate]);
+    onChange()
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
 
-  const handleNavigate = (screen: Screen) => {
-    setCurrentScreen(screen);
-  };
-
-  const handleRepeatAll = () => {
-    const todayTasks = getTasksForToday();
-    if (todayTasks.length === 0) {
-      alert('Нет задач для повторения');
-      return;
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current)
+      }
     }
-    const queue = todayTasks.map((t) => t.id);
-    setReviewQueue(queue.slice(1));
-    setReviewTaskId(queue[0]);
-    setCurrentScreen('review');
-  };
+  }, [])
 
-  const handleStartReview = (taskId: string) => {
-    setReviewTaskId(taskId);
-    setReviewQueue([]);
-    setCurrentScreen('review');
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    const task = getTaskById(taskId);
-    if (!task) return;
-    if (window.confirm(`Вы уверены, что хотите удалить задачу "${task.name}"?`)) {
-      deleteTask(taskId);
-      setNotification('Задача удалена');
-    }
-  };
-
-  const handleReviewDone = (status: ReviewStatus) => {
-    if (!reviewTaskId) return;
-    recordReview(reviewTaskId, status);
-
-    if (reviewQueue.length > 0) {
-      const [next, ...rest] = reviewQueue;
-      setReviewTaskId(next);
-      setReviewQueue(rest);
-    } else {
-      setCurrentScreen('home');
-      setReviewTaskId(null);
-      setNotification('✅ Повторение записано!');
-    }
-  };
-
-  const handleAddTask = (data: {
-    name: string;
-    url: string;
-    difficulty: Difficulty;
-    topics: string;
-    notes: string;
-  }) => {
-    addTask(data);
-  };
-
-  if (!currentUser) return null;
-
-  const todayTasks = getTasksForToday();
-  const reviewTask = reviewTaskId ? getTaskById(reviewTaskId) : null;
+  if (!currentUser) return null
 
   return (
-    <>
-      <AppHeader userName={currentUser.name} onLogout={handleLogout} />
+    <main className="min-h-screen relative overflow-hidden">
 
-      {notification && (
-        <div
-          className="app-notification"
-          role="status"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            top: '1rem',
-            right: '1rem',
-            zIndex: 9999,
-            background: 'var(--color-success)',
-            color: '#fff',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          {notification}
-        </div>
+      {/* Profile menu – always visible except during review */}
+      {!isReviewView && (
+        <ProfileMenu
+          activePanel={activePanel}
+          onPanelChange={handlePanelChange}
+          mode="floating"
+          userName={currentUser.name}
+          onRequestLogout={handleRequestLogout}
+        />
       )}
 
-      <div className="app-container">
-        <AppNav currentScreen={currentScreen} onNavigate={handleNavigate} />
+      <ConfirmDialog
+        isOpen={isLogoutDialogOpen}
+        title="Sign out?"
+        description="You will be returned to the login screen and need to sign in again to continue."
+        confirmLabel="Sign out"
+        cancelLabel="Cancel"
+        onConfirm={handleLogout}
+        onCancel={handleCancelLogout}
+        confirmVariant="danger"
+      />
 
-        <main className="app-main" id="main-content" role="main">
-        {currentScreen === 'home' && (
-          <HomePage
-            todayTasks={todayTasks}
-            onReview={handleStartReview}
-            onDelete={handleDeleteTask}
-            onRepeatAll={handleRepeatAll}
+      {!isReviewView && (
+        <>
+          <AddTaskFab onClick={handleOpenAddTask} />
+          <AddTaskModal
+            isOpen={isAddTaskModalOpen}
+            onClose={handleCloseAddTask}
+            onSaveTask={handleSaveTaskFromFlow}
           />
-        )}
-        {currentScreen === 'add' && (
-          <AddTaskPage onAdd={handleAddTask} onCancel={() => setCurrentScreen('home')} />
-        )}
-        {currentScreen === 'review' && reviewTask && (
-          <ReviewPage
-            task={reviewTask}
-            onReview={handleReviewDone}
-            onBack={() => setCurrentScreen('home')}
-          />
-        )}
-        {currentScreen === 'review' && !reviewTask && (
-          <HomePage
-            todayTasks={todayTasks}
-            onReview={handleStartReview}
-            onDelete={handleDeleteTask}
-            onRepeatAll={handleRepeatAll}
-          />
-        )}
-        {currentScreen === 'stats' && <StatsPage />}
-        {currentScreen === 'settings' && <SettingsPage />}
-      </main>
-      </div>
+        </>
+      )}
 
-      <AppFooter />
-    </>
-  );
+      {/* Content */}
+      {isReviewView && sessionTasks.length > 0 ? (
+        <ReviewSession
+          tasks={sessionTasks}
+          onReviewFeedback={handleReviewFeedback}
+          onEnd={handleEndSession}
+          currentProgress={todayProgress}
+          totalCards={todayTotal}
+        />
+      ) : (
+        <>
+          {/* Main content: smoothly shifts left when desktop side panel opens */}
+          <div
+            className={cn(
+              "transition-[padding,opacity] duration-700 ease-out",
+              isDesktopPanelOpen ? DESKTOP_SPLIT_CONTENT_RESERVE_CLASS : "pr-0",
+            )}
+          >
+            <HomeView
+              todayProgress={todayProgress}
+              todayTotal={todayTotal}
+              onStartSession={handleStartSession}
+              isExiting={isTransitioningToReview}
+              isStartDisabled={todayTasks.length === 0 || isTransitioningToReview}
+              layout={isDesktopPanelOpen ? "split" : "full"}
+            />
+          </div>
+
+          {/* Side panel: overlay on mobile/tablet, docked on desktop */}
+          <SidePanel
+            activePanel={activePanel}
+            onClose={() => setActivePanel(null)}
+            mode={isSplitDesktop ? "docked" : "overlay"}
+            tasks={tasks}
+            currentUser={currentUser}
+          />
+        </>
+      )}
+    </main>
+  )
 }

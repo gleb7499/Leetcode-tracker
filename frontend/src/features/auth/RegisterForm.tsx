@@ -1,36 +1,37 @@
-import { useState } from 'react';
-import { RegisterSchema } from '../../shared/validation/schemas';
-import { PasswordStrength } from './PasswordStrength';
+import { useState } from "react"
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
+import { RegisterSchema } from "@/src/shared/validation/schemas"
+import { PasswordStrength } from "./PasswordStrength"
+import { cn } from "@/lib/utils"
+import { AuthSubmitButton } from "./AuthSubmitButton"
 
 interface RegisterFormProps {
   onRegister: (
     name: string,
     email: string,
     password: string,
-  ) => Promise<{ success: boolean; message: string }>;
-  isProcessing: boolean;
+  ) => Promise<{ success: boolean; message: string }>
+  isProcessing: boolean
 }
 
 interface FormErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  passwordConfirm?: string;
-  terms?: string;
+  name?: string
+  email?: string
+  password?: string
+  passwordConfirm?: string
+  terms?: string
 }
 
 export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [terms, setTerms] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(
-    null,
-  );
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [terms, setTerms] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null)
 
   const validateField = (field: keyof FormErrors) => {
     const result = RegisterSchema.safeParse({
@@ -39,203 +40,181 @@ export function RegisterForm({ onRegister, isProcessing }: RegisterFormProps) {
       password,
       passwordConfirm,
       terms: terms || (undefined as unknown as true),
-    });
-    const updated = { ...errors };
+    })
+    const updated = { ...errors }
     if (!result.success) {
-      const issue = result.error.issues.find((i) => i.path[0] === field);
+      const issue = result.error.issues.find((i) => i.path[0] === field)
       if (issue) {
-        updated[field] = issue.message;
+        updated[field] = issue.message
       } else {
-        delete updated[field];
+        updated[field] = undefined
       }
     } else {
-      delete updated[field];
+      updated[field] = undefined
     }
-    setErrors(updated);
-  };
+    setErrors(updated)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     const result = RegisterSchema.safeParse({
       name,
       email,
       password,
       passwordConfirm,
       terms: terms || (undefined as unknown as true),
-    });
+    })
 
     if (!result.success) {
-      const fieldErrors: FormErrors = {};
+      const fieldErrors: FormErrors = {}
       for (const issue of result.error.issues) {
-        const f = issue.path[0] as keyof FormErrors;
-        fieldErrors[f] = issue.message;
+        const f = issue.path[0] as keyof FormErrors
+        fieldErrors[f] = issue.message
       }
-      setErrors(fieldErrors);
-      setMessage({ text: 'Пожалуйста, исправьте ошибки в форме', type: 'error' });
-      return;
+      setErrors(fieldErrors)
+      setMessage({ text: "Please fix the errors in the form", type: "error" })
+      return
     }
 
-    setMessage(null);
-    const res = await onRegister(name.trim(), email.trim().toLowerCase(), password);
-    setMessage({ text: res.message, type: res.success ? 'success' : 'error' });
-  };
+    setMessage(null)
+    const res = await onRegister(name.trim(), email.trim().toLowerCase(), password)
+    setMessage({ text: res.message, type: res.success ? "success" : "error" })
+  }
+
+  const inputClass = (hasError?: string) =>
+    cn(
+      "w-full py-3 rounded-xl glass-subtle text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all",
+      hasError ? "ring-2 ring-destructive/60" : "focus:ring-primary/50",
+    )
 
   return (
-    <form id="register-form" className="auth-form" onSubmit={handleSubmit} noValidate>
-      <h2 className="form-heading">Регистрация</h2>
-
-      <div className="form-group">
-        <label htmlFor="register-name" className="form-label">
-          Имя
-        </label>
-        <div className="input-wrapper">
-          <span className="input-icon" aria-hidden="true">
-            👤
-          </span>
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <div>
+        <label className="text-sm font-medium text-foreground/90 block mb-1.5">Name</label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            id="register-name"
-            name="name"
-            className={`form-input${errors.name ? ' error' : ''}`}
-            placeholder="Ваше имя"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onBlur={() => validateField('name')}
+            onBlur={() => validateField("name")}
+            placeholder="Your name"
             autoComplete="name"
-            required
+            className={cn(inputClass(errors.name), "pl-10 pr-4")}
           />
         </div>
-        {errors.name && <span className="field-error">{errors.name}</span>}
+        {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="register-email" className="form-label">
-          Email
-        </label>
-        <div className="input-wrapper">
-          <span className="input-icon" aria-hidden="true">
-            ✉️
-          </span>
+      <div>
+        <label className="text-sm font-medium text-foreground/90 block mb-1.5">Email</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="email"
-            id="register-email"
-            name="email"
-            className={`form-input${errors.email ? ' error' : ''}`}
-            placeholder="your@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => validateField('email')}
+            onBlur={() => validateField("email")}
+            placeholder="your@email.com"
             autoComplete="email"
-            required
+            className={cn(inputClass(errors.email), "pl-10 pr-4")}
           />
         </div>
-        {errors.email && <span className="field-error">{errors.email}</span>}
+        {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="register-password" className="form-label">
-          Пароль
-        </label>
-        <div className="input-wrapper">
-          <span className="input-icon" aria-hidden="true">
-            🔒
-          </span>
+      <div>
+        <label className="text-sm font-medium text-foreground/90 block mb-1.5">Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
-            type={showPassword ? 'text' : 'password'}
-            id="register-password"
-            name="password"
-            className={`form-input${errors.password ? ' error' : ''}`}
-            placeholder="Минимум 8 символов"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onBlur={() => validateField('password')}
+            onBlur={() => validateField("password")}
+            placeholder="Minimum 8 characters"
             autoComplete="new-password"
-            required
+            className={cn(inputClass(errors.password), "pl-10 pr-12")}
           />
           <button
             type="button"
-            className="toggle-password"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            <span className="toggle-icon">{showPassword ? '🙈' : '👁️'}</span>
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        {errors.password && <span className="field-error">{errors.password}</span>}
+        {errors.password && <p className="mt-1.5 text-xs text-destructive">{errors.password}</p>}
         <PasswordStrength password={password} />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="register-password-confirm" className="form-label">
-          Подтверждение пароля
+      <div>
+        <label className="text-sm font-medium text-foreground/90 block mb-1.5">
+          Confirm password
         </label>
-        <div className="input-wrapper">
-          <span className="input-icon" aria-hidden="true">
-            🔒
-          </span>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
-            type={showPasswordConfirm ? 'text' : 'password'}
-            id="register-password-confirm"
-            name="passwordConfirm"
-            className={`form-input${errors.passwordConfirm ? ' error' : ''}`}
-            placeholder="Повторите пароль"
+            type={showPasswordConfirm ? "text" : "password"}
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
-            onBlur={() => validateField('passwordConfirm')}
+            onBlur={() => validateField("passwordConfirm")}
+            placeholder="Repeat password"
             autoComplete="new-password"
-            required
+            className={cn(inputClass(errors.passwordConfirm), "pl-10 pr-12")}
           />
           <button
             type="button"
-            className="toggle-password"
             onClick={() => setShowPasswordConfirm((v) => !v)}
-            aria-label={showPasswordConfirm ? 'Скрыть пароль' : 'Показать пароль'}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
           >
-            <span className="toggle-icon">{showPasswordConfirm ? '🙈' : '👁️'}</span>
+            {showPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {errors.passwordConfirm && (
-          <span className="field-error">{errors.passwordConfirm}</span>
+          <p className="mt-1.5 text-xs text-destructive">{errors.passwordConfirm}</p>
         )}
       </div>
 
-      <div className="form-group">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            id="accept-terms"
-            name="terms"
-            className="form-checkbox"
-            checked={terms}
-            onChange={(e) => setTerms(e.target.checked)}
-          />
-          <span className="checkbox-text">
-            Я принимаю{' '}
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              условия использования
-            </a>
-          </span>
-        </label>
-        {errors.terms && <span className="field-error">{errors.terms}</span>}
-      </div>
+      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={terms}
+          onChange={(e) => setTerms(e.target.checked)}
+          className="mt-0.5 w-4 h-4"
+        />
+        <span className="text-sm text-muted-foreground">
+          I accept the{" "}
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+          >
+            terms of use
+          </button>
+        </span>
+      </label>
+      {errors.terms && <p className="-mt-2 text-xs text-destructive">{errors.terms}</p>}
 
       {message && (
         <div
-          id="register-message"
-          className={`auth-message show ${message.type}`}
+          className={cn(
+            "py-3 px-4 rounded-xl text-sm",
+            message.type === "success"
+              ? "bg-primary/15 text-primary border border-primary/20"
+              : "bg-destructive/15 text-destructive border border-destructive/20",
+          )}
           role="alert"
         >
           {message.text}
         </div>
       )}
 
-      <button
-        type="submit"
-        className={`btn btn-primary btn-block${isProcessing ? ' loading' : ''}`}
-        disabled={isProcessing}
-      >
-        {isProcessing ? '' : 'Зарегистрироваться'}
-      </button>
+      <AuthSubmitButton type="submit" disabled={isProcessing}>
+        {isProcessing ? "Creating account…" : "Create Account"}
+      </AuthSubmitButton>
     </form>
-  );
+  )
 }

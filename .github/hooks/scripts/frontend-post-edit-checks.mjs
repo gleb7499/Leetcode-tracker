@@ -45,7 +45,7 @@ function extractRelevantSignals(payload) {
 }
 
 function touchesFrontend(allSignals) {
-  return allSignals.some((signal) => normalizeForMatch(signal).includes("frontend-new"));
+  return allSignals.some((signal) => normalizeForMatch(signal).includes("frontend"));
 }
 
 function runNpmScript(frontendDir, scriptName) {
@@ -114,11 +114,11 @@ if (!isLikelyEditTool(toolName) || !touchesFrontend(allSignals)) {
 }
 
 const workspaceCwd = typeof payload?.cwd === "string" && payload.cwd.trim() ? payload.cwd : process.cwd();
-const frontendDir = path.resolve(workspaceCwd, "frontend-new");
+const frontendDir = path.resolve(workspaceCwd, "frontend");
 
 if (!fs.existsSync(frontendDir)) {
   writeJson({
-    systemMessage: "Frontend quality hook skipped: frontend-new directory not found.",
+    systemMessage: "Frontend quality hook skipped: frontend directory not found.",
   });
   process.exit(0);
 }
@@ -151,7 +151,7 @@ const failureSummary = summarizeFailure(failedChecks);
 const failedStageNames = failedChecks.map((check) => check.scriptName).join(", ");
 writeJson({
   decision: "block",
-  reason: `frontend-new quality pipeline failed (${failedStageNames}). Fix issues before continuing.`,
+  reason: `frontend quality pipeline failed (${failedStageNames}). Fix issues before continuing.`,
   systemMessage: "Frontend quality pipeline detected issues after frontend edit. See hook output details.",
   hookSpecificOutput: {
     hookEventName: "PostToolUse",
