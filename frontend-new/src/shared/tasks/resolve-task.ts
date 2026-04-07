@@ -7,6 +7,12 @@ interface ResolveTaskInput {
   rawInput: string
 }
 
+export type LeetCodeResolveMode = "auto" | "success" | "failure"
+
+interface LeetCodeDebugConfig {
+  leetcodeResolveMode?: LeetCodeResolveMode
+}
+
 export interface ResolveTaskSuccess {
   ok: true
   draft: ResolvedTaskDraft
@@ -15,6 +21,7 @@ export interface ResolveTaskSuccess {
 export interface ResolveTaskFailure {
   ok: false
   reason: "invalid_input" | "not_found" | "unknown"
+  fallbackDraft?: ResolvedTaskDraft
 }
 
 export type ResolveTaskResult = ResolveTaskSuccess | ResolveTaskFailure
@@ -26,6 +33,38 @@ export interface TaskSourceResolver {
 
 const LEETCODE_RESOLVE_SIMULATION_DELAY_MS = 900
 const LEETCODE_FALLBACK_DIFFICULTY: Difficulty = "Medium"
+
+declare global {
+  interface Window {
+    LT_DEBUG?: LeetCodeDebugConfig
+    __LT_DEBUG__?: LeetCodeDebugConfig
+  }
+}
+
+function ensureDebugConfig(): LeetCodeDebugConfig | null {
+  if (typeof window === "undefined") return null
+
+  const config = window.LT_DEBUG ?? window.__LT_DEBUG__ ?? {}
+  window.LT_DEBUG = config
+  window.__LT_DEBUG__ = config
+  return config
+}
+
+if (typeof window !== "undefined") {
+  ensureDebugConfig()
+}
+
+function getDebugConfig(): LeetCodeDebugConfig | null {
+  return ensureDebugConfig()
+}
+
+function getLeetCodeResolveMode(): LeetCodeResolveMode {
+  const mode = getDebugConfig()?.leetcodeResolveMode
+  if (mode === "success" || mode === "failure") {
+    return mode
+  }
+  return "auto"
+}
 
 function normalizeLeetCodeUrl(input: string): URL | null {
   try {
@@ -47,6 +86,37 @@ function titleFromSlug(slug: string): string {
     .join(" ")
 }
 
+function createDraftFromSlug(
+  slug: string,
+  mode: LeetCodeResolveMode,
+): {
+  fullUrl: string
+  draft: ResolvedTaskDraft
+  catalogHit: boolean
+} {
+  const fullUrl = `https://leetcode.com/problems/${slug}/`
+  const catalogTask = MOCK_REVIEW_TASKS.find((task) => task.url === fullUrl)
+
+  return {
+    fullUrl,
+    catalogHit: Boolean(catalogTask),
+    draft: {
+      source: "leetcode",
+      name: catalogTask?.name ?? titleFromSlug(slug),
+      url: fullUrl,
+      difficulty: catalogTask?.difficulty ?? LEETCODE_FALLBACK_DIFFICULTY,
+      topics: catalogTask?.topics ?? [],
+      notes: catalogTask?.notes ?? "",
+      sourceMeta: {
+        slug,
+        sourceTaskId: catalogTask?.id,
+        catalogHit: Boolean(catalogTask),
+        resolveMode: mode,
+      },
+    },
+  }
+}
+
 const leetCodeResolver: TaskSourceResolver = {
   source: "leetcode",
   async resolve(input: string): Promise<ResolveTaskResult> {
@@ -63,23 +133,26 @@ const leetCodeResolver: TaskSourceResolver = {
       return { ok: false, reason: "invalid_input" }
     }
 
-    const fullUrl = `https://leetcode.com/problems/${slug}/`
-    const catalogTask = MOCK_REVIEW_TASKS.find((task) => task.url === fullUrl)
+    const resolveMode = getLeetCodeResolveMode()
+    const { draft, catalogHit } = createDraftFromSlug(slug, resolveMode)
+
+    if (resolveMode === "failure" || (resolveMode === "auto" && !catalogHit)) {
+      return {
+        ok: false,
+        reason: "not_found",
+        fallbackDraft: {
+          ...draft,
+          sourceMeta: {
+            ...draft.sourceMeta,
+            forcedFailure: resolveMode === "failure",
+          },
+        },
+      }
+    }
+
     return {
       ok: true,
-      draft: {
-        source: "leetcode",
-        name: catalogTask?.name ?? titleFromSlug(slug),
-        url: fullUrl,
-        difficulty: catalogTask?.difficulty ?? LEETCODE_FALLBACK_DIFFICULTY,
-        topics: catalogTask?.topics ?? [],
-        notes: catalogTask?.notes ?? "",
-        sourceMeta: {
-          slug,
-          sourceTaskId: catalogTask?.id,
-          catalogHit: Boolean(catalogTask),
-        },
-      },
+      draft,
     }
   },
 }

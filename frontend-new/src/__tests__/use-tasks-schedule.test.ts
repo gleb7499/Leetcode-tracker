@@ -51,4 +51,27 @@ describe("useTasks scheduling", () => {
     const oneDayMs = 24 * 60 * 60 * 1000
     expect(nextReviewMs - createdAtMs).toBeGreaterThanOrEqual(oneDayMs - 60 * 1000)
   })
+
+  it("keeps custom source payload for manual entry", () => {
+    const { result } = renderHook(() => useTasks())
+    let createdSource = ""
+    let createdUrl = ""
+
+    act(() => {
+      const created = result.current.addTask({
+        name: "Manual Graph Task",
+        url: "custom://manual/manual-graph-task-abc123",
+        difficulty: "Medium",
+        topics: "Graph, BFS",
+        notes: "Added manually",
+        source: "custom",
+        scheduleMode: "today",
+      })
+      createdSource = created.source
+      createdUrl = created.url
+    })
+
+    expect(createdSource).toBe("custom")
+    expect(createdUrl.startsWith("custom://manual/")).toBe(true)
+  })
 })

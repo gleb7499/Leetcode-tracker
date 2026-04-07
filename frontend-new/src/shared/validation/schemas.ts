@@ -55,6 +55,19 @@ export const LeetCodeTaskUrlFormSchema = z.object({
   url: LeetCodeTaskUrlSchema,
 });
 
+const ManualTaskDifficultySchema = z.preprocess(
+  (value) => (value == null ? '' : value),
+  z.enum(['Easy', 'Medium', 'Hard'], {
+    error: 'Select difficulty',
+  }),
+);
+
+export const ManualTaskDetailsSchema = z.object({
+  name: z.string().trim().min(3, 'Minimum 3 characters').max(200, 'Maximum 200 characters'),
+  difficulty: ManualTaskDifficultySchema,
+  topics: z.array(z.string().trim().min(1)).min(1, 'Select at least one topic'),
+});
+
 export const ForgotPasswordSchema = z.object({
   email: z.string().email('Enter a valid email'),
 });
@@ -63,4 +76,5 @@ export type LoginFormData = z.infer<typeof LoginSchema>;
 export type RegisterFormData = z.infer<typeof RegisterSchema>;
 export type TaskFormData = z.infer<typeof TaskSchema>;
 export type LeetCodeTaskUrlFormData = z.infer<typeof LeetCodeTaskUrlFormSchema>;
+export type ManualTaskDetailsFormData = z.infer<typeof ManualTaskDetailsSchema>;
 export type ForgotPasswordFormData = z.infer<typeof ForgotPasswordSchema>;

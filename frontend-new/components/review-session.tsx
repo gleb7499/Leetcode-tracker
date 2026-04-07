@@ -3,17 +3,11 @@ import { ExternalLink, Check, Minus, X } from "lucide-react"
 import { REVIEW_FEEDBACK_OPTIONS, type ReviewFeedback } from "@/lib/review-feedback"
 import type { Task } from "@/src/shared/types"
 import { cn } from "@/lib/utils"
-
-type Difficulty = Task["difficulty"]
+import { TaskDifficultyPill } from "@/src/shared/components/task-difficulty-pill"
+import { TaskTopicChip } from "@/src/shared/components/task-topic-chip"
 
 const CARD_EXIT_MS = 320
 const SESSION_END_MS = 400
-
-const difficultyStyles: Record<Difficulty, string> = {
-  Easy: "text-primary border-primary/30 bg-primary/12",
-  Medium: "text-accent border-accent/30 bg-accent/12",
-  Hard: "text-destructive border-destructive/30 bg-destructive/12",
-}
 
 const feedbackButtonSurfaceStyles = [
   "glass-subtle",
@@ -183,27 +177,21 @@ export function ReviewSession({
                 </h2>
               </div>
 
-              <span
-                className={cn(
-                  "shrink-0 rounded-xl px-4 py-2 text-sm font-semibold border",
-                  difficultyStyles[currentTask.difficulty],
-                )}
+              <TaskDifficultyPill
+                difficulty={currentTask.difficulty}
+                className="shrink-0"
                 aria-label={`Difficulty: ${currentTask.difficulty}`}
-              >
-                {currentTask.difficulty}
-              </span>
+              />
             </header>
 
             {currentTask.topics.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2" role="list" aria-label="Task topics">
                 {currentTask.topics.map((topic) => (
-                  <span
+                  <TaskTopicChip
                     key={topic}
+                    topic={topic}
                     role="listitem"
-                    className="rounded-lg px-3 py-1.5 text-sm text-foreground/90 border border-white/15 bg-white/[0.04]"
-                  >
-                    {topic}
-                  </span>
+                  />
                 ))}
               </div>
             )}

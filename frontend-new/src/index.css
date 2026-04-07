@@ -763,6 +763,207 @@
 }
 
 /* ── Add-task flow shared UI ────────────────────────────── */
+.manual-difficulty-option {
+  transition:
+    opacity 220ms ease,
+    box-shadow 220ms ease,
+    filter 220ms ease;
+}
+
+.manual-difficulty-option--muted {
+  opacity: 0.42;
+  filter: saturate(0.52) brightness(0.84);
+}
+
+.manual-difficulty-option--easy {
+  --manual-difficulty-active-color: color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+.manual-difficulty-option--medium {
+  --manual-difficulty-active-color: color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.manual-difficulty-option--hard {
+  --manual-difficulty-active-color: color-mix(in oklab, var(--destructive) 22%, transparent);
+}
+
+.manual-difficulty-option--easy:hover,
+.manual-difficulty-option--selected-easy {
+  box-shadow:
+    0 0 0 1.25px var(--manual-difficulty-active-color),
+    0 0 45px -4px var(--manual-difficulty-active-color);
+}
+
+.manual-difficulty-option--medium:hover,
+.manual-difficulty-option--selected-medium {
+  box-shadow:
+    0 0 0 1.25px var(--manual-difficulty-active-color),
+    0 0 45px -4px var(--manual-difficulty-active-color);
+}
+
+.manual-difficulty-option--hard:hover,
+.manual-difficulty-option--selected-hard {
+  box-shadow:
+    0 0 0 1.25px var(--manual-difficulty-active-color),
+    0 0 45px -4px var(--manual-difficulty-active-color);
+}
+
+.manual-difficulty-option--easy:hover .manual-difficulty-option__pill,
+.manual-difficulty-option--selected-easy .manual-difficulty-option__pill {
+  background-color: var(--manual-difficulty-active-color);
+}
+
+.manual-difficulty-option--medium:hover .manual-difficulty-option__pill,
+.manual-difficulty-option--selected-medium .manual-difficulty-option__pill {
+  background-color: var(--manual-difficulty-active-color);
+}
+
+.manual-difficulty-option--hard:hover .manual-difficulty-option__pill,
+.manual-difficulty-option--selected-hard .manual-difficulty-option__pill {
+  background-color: var(--manual-difficulty-active-color);
+}
+
+.manual-difficulty-option__pill {
+  width: 100%;
+  transition: background-color 220ms ease-in-out;
+}
+
+.manual-difficulty-option--selected-easy {
+  opacity: 1;
+  filter: saturate(1.08) brightness(1.06);
+}
+
+.manual-difficulty-option--selected-medium {
+  opacity: 1;
+  filter: saturate(1.08) brightness(1.06);
+}
+
+.manual-difficulty-option--selected-hard {
+  opacity: 1;
+  filter: saturate(1.08) brightness(1.06);
+}
+
+.manual-topic-chip-item {
+  transition:
+    opacity 280ms ease-in-out,
+    transform 300ms ease-in-out,
+    filter 280ms ease-in-out;
+  will-change: transform, opacity;
+}
+
+.manual-topic-chip-item--removing {
+  opacity: 0;
+  transform: scale(0.9) translateY(-4px);
+  filter: saturate(0.72);
+  pointer-events: none;
+}
+
+.manual-topic-remove-button {
+  opacity: 0.76;
+  transition:
+    color 280ms ease-in-out,
+    opacity 280ms ease-in-out,
+    background-color 320ms ease-in-out,
+    box-shadow 320ms ease-in-out,
+    transform 260ms ease-in-out;
+}
+
+.manual-topic-remove-button:hover {
+  color: var(--foreground);
+  opacity: 1;
+  background-color: color-mix(in oklab, var(--muted-foreground) 18%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--muted-foreground) 28%, transparent);
+  transform: scale(1.04);
+}
+
+.manual-topic-remove-button:active {
+  transform: scale(0.95);
+}
+
+.manual-topic-remove-icon {
+  opacity: 0.86;
+  transition:
+    opacity 260ms ease-in-out,
+    transform 260ms ease-in-out;
+}
+
+.manual-topic-remove-button:hover .manual-topic-remove-icon {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.manual-topics-list-viewport {
+  overflow: hidden;
+  will-change: height;
+}
+
+.topic-suggestion-panel {
+  margin-top: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    max-height 360ms ease-in-out,
+    opacity 320ms ease-in-out,
+    margin-top 320ms ease-in-out;
+}
+
+.topic-suggestion-panel--open {
+  margin-top: 0.5rem;
+  max-height: 8.75rem;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.topic-suggestion-list {
+  height: 8.25rem;
+  max-height: 8.25rem;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--color-white) 10%, transparent);
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.topic-suggestion-item {
+  min-height: 2.25rem;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  color: color-mix(in oklab, var(--foreground) 90%, transparent);
+  transition:
+    background-color 260ms ease-in-out,
+    color 260ms ease-in-out,
+    box-shadow 260ms ease-in-out;
+}
+
+.topic-suggestion-item:hover {
+  background: color-mix(in oklab, var(--scrollbar-thumb) 28%, transparent);
+  color: var(--foreground);
+}
+
+.topic-suggestion-item--active {
+  background: color-mix(in oklab, var(--scrollbar-thumb) 52%, transparent);
+  color: var(--foreground);
+  box-shadow: none;
+}
+
+.topic-suggestion-empty {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  text-align: center;
+  color: color-mix(in oklab, var(--muted-foreground) 88%, transparent);
+  font-size: 0.875rem;
+}
+
 .orbital-loader {
   --orbital-loader-color: var(--primary);
   --orbital-loader-size: 3.25rem;
@@ -850,6 +1051,36 @@
   .add-task-fab,
   .add-task-fab__label {
     transition: none;
+  }
+
+  .manual-difficulty-option {
+    transition: none;
+  }
+
+  .topic-suggestion-panel,
+  .topic-suggestion-item {
+    transition: none;
+  }
+
+  .manual-topic-chip-item,
+  .manual-topic-remove-button,
+  .manual-topic-remove-icon,
+  .manual-topics-list-viewport {
+    transition: none;
+    animation: none;
+  }
+
+  .manual-topic-chip-item--removing {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .manual-difficulty-option:hover,
+  .manual-difficulty-option--selected-easy,
+  .manual-difficulty-option--selected-medium,
+  .manual-difficulty-option--selected-hard {
+    box-shadow: none;
   }
 
   .add-task-fab:hover {
