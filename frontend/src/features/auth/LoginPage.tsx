@@ -26,9 +26,12 @@ export function LoginPage() {
 
   const loginPanelRef = useRef<HTMLDivElement | null>(null)
   const registerPanelRef = useRef<HTMLDivElement | null>(null)
+  // Prevents the "already-authenticated" redirect from firing right after a
+  // fresh login, which would race against the explicit navigate to /verify-email.
+  const pendingVerifyRef = useRef(false)
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && !pendingVerifyRef.current) {
       navigate("/", { replace: true })
     }
   }, [currentUser, navigate])
@@ -54,12 +57,20 @@ export function LoginPage() {
     return () => observer.disconnect()
   }, [updatePanelHeight])
 
-  if (currentUser) return null
+  // Only block rendering for already-authenticated users (pre-existing session).
+  // When pendingVerifyRef is true the user just logged in and is about to be
+  // redirected to /verify-email; we keep rendering so the success message stays
+  // visible during the 800 ms delay before navigation fires.
+  if (currentUser && !pendingVerifyRef.current) return null
 
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     const result = await login(email, password, remember)
     if (result.success) {
-      setTimeout(() => navigate("/", { replace: true }), 800)
+      pendingVerifyRef.current = true
+      setTimeout(
+        () => navigate("/verify-email", { state: { email }, replace: true }),
+        800,
+      )
     }
     return result
   }

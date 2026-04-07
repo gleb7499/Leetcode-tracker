@@ -18,6 +18,7 @@ import "@fontsource/jetbrains-mono/cyrillic-500.css"
 import "./index.css"
 import App from "./App"
 import { LoginPage } from "./features/auth/LoginPage"
+import { EmailVerificationPage } from "./features/auth/EmailVerificationPage"
 import { RootLayout } from "./layouts/root-layout"
 
 const rootElement = document.getElementById("root")
@@ -31,6 +32,7 @@ createRoot(rootElement).render(
       <Routes>
         <Route element={<RootLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/" element={<App />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
