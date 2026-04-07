@@ -1,5 +1,5 @@
 
-import { Play } from "lucide-react"
+import { Play } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 
 interface StartButtonProps {

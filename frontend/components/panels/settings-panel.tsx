@@ -1,6 +1,6 @@
 
 import { useState } from "react"
-import { Bell, Moon, Target, Clock, Volume2 } from "lucide-react"
+import { Bell, Moon, Target, Clock, Volume2 } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 
 interface SettingsPanelProps {

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react"
+import { Plus } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 
 interface AddTaskFabProps {

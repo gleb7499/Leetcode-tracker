@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { Check, X } from "lucide-react"
+import { Check, LeetCodeIcon, X } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
-import { LeetCodeIcon } from "@/src/shared/icons/leetcode-icon"
 import {
   LeetCodeTaskUrlSchema,
   ManualTaskDetailsSchema,
@@ -539,6 +538,10 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
     const timer = setTimeout(() => closeButtonRef.current?.focus(), 0)
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return
+      }
+
       if (event.key === "Escape") {
         event.preventDefault()
         requestClose()
@@ -768,15 +771,19 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                 LeetCode URL
               </label>
               <input
-                type="url"
+                type="text"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={state.leetCodeUrl}
                 onChange={(event) =>
                   dispatch({ type: "UPDATE_LEETCODE_URL", value: event.target.value })
                 }
-                onBlur={() =>
+                onBlur={(event) =>
                   dispatch({
                     type: "SET_LEETCODE_URL_ERROR",
-                    error: getLeetCodeUrlError(state.leetCodeUrl),
+                    error: getLeetCodeUrlError(event.currentTarget.value),
                   })
                 }
                 placeholder="https://leetcode.com/problems/two-sum/"
@@ -915,6 +922,10 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                   })
                 }
                 onKeyDown={(event) => {
+                  if (event.ctrlKey || event.metaKey || event.altKey) {
+                    return
+                  }
+
                   if (topicSuggestions.length === 0) return
 
                   if (event.key === "ArrowDown") {

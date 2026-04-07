@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { ProgressRingSvg } from "@/src/shared/resources/icons"
 
 interface ProgressRingProps {
   progress: number
@@ -23,36 +24,14 @@ export function ProgressRing({ progress, total, size = 160, className }: Progres
       {/* Inner glow */}
       <div className="absolute inset-4 rounded-full bg-primary/5 blur-xl animate-pulse-soft" />
 
-      <svg
-        width={size}
-        height={size}
+      <ProgressRingSvg
+        size={size}
+        radius={radius}
+        strokeWidth={strokeWidth}
+        circumference={circumference}
+        offset={offset}
         className="transform -rotate-90 relative z-10"
-        aria-hidden="true"
-      >
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className="text-foreground/10"
-        />
-        {/* Progress circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="text-primary transition-all duration-1000 ease-out"
-        />
-      </svg>
+      />
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-20">

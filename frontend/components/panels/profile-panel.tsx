@@ -1,4 +1,4 @@
-import { CalendarClock, Fingerprint, LibraryBig, Mail, Target, UserRound } from "lucide-react"
+import { CalendarClock, Fingerprint, LibraryBig, Mail, Target, UserRound } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 import type { CurrentUser, Task } from "@/src/shared/types"
 

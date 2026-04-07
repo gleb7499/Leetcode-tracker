@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock } from "@/src/shared/resources/icons"
 import { LoginSchema, type LoginFormData } from "@/src/shared/validation/schemas"
 import { cn } from "@/lib/utils"
 import { AuthSubmitButton } from "./AuthSubmitButton"

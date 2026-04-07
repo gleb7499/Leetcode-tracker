@@ -1,6 +1,10 @@
 import type { Difficulty, ResolvedTaskDraft, TaskSource } from "@/src/shared/types"
 import { MOCK_REVIEW_TASKS } from "@/data/review-tasks"
-import { LEETCODE_PROBLEM_PATH_REGEX, isLeetCodeHost } from "@/src/shared/tasks/leetcode-url"
+import {
+  extractLeetCodeProblemSlug,
+  LEETCODE_PROBLEM_PATH_REGEX,
+  isLeetCodeHost,
+} from "@/src/shared/tasks/leetcode-url"
 
 interface ResolveTaskInput {
   source: TaskSource
@@ -127,8 +131,7 @@ const leetCodeResolver: TaskSourceResolver = {
 
     await new Promise((resolve) => setTimeout(resolve, LEETCODE_RESOLVE_SIMULATION_DELAY_MS))
 
-    const match = /^\/problems\/([^/]+)\/?$/.exec(parsed.pathname)
-    const slug = match?.[1] ?? ""
+    const slug = extractLeetCodeProblemSlug(parsed.pathname) ?? ""
     if (!slug) {
       return { ok: false, reason: "invalid_input" }
     }

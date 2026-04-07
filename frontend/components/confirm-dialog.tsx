@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 
 interface ConfirmDialogProps {
@@ -33,6 +33,10 @@ export function ConfirmDialog({
     document.body.style.overflow = "hidden"
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return
+      }
+
       if (event.key === "Escape") {
         event.preventDefault()
         onCancel()

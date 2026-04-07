@@ -1,4 +1,4 @@
-import { Flame, Target, TrendingUp, Calendar } from "lucide-react"
+import { Flame, Target, TrendingUp, Calendar } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 import type { Task } from "@/src/shared/types"
 

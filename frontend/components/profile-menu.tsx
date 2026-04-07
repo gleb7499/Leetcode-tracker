@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { User, BarChart3, BookOpen, Settings, X, LogOut } from "lucide-react"
+import { User, BarChart3, BookOpen, Settings, X, LogOut, MainMenuToggleIcon } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 import type { PanelType } from "@/components/panels/panel-types"
 
@@ -158,32 +158,10 @@ export function ProfileMenu({
         aria-controls="quick-actions-menu"
         aria-label={hasActivePanel ? "Close split panel" : isMenuVisible ? "Close quick menu" : "Open quick menu"}
       >
-        <div className={cn("relative", isMenuVisible ? "w-7 h-7" : "w-6 h-6")}>
-          <span
-            className={cn(
-              "absolute left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-foreground",
-              "transition-all ease-[cubic-bezier(0.22,1,0.36,1)]",
-              isMenuVisible ? "top-1/2 -translate-y-1/2 rotate-45 w-6" : "top-[4px] w-5",
-            )}
-            style={{ transitionDuration: `${ANIMATION_DURATION_MS}ms` }}
-          />
-          <span
-            className={cn(
-              "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-0.5 rounded-full bg-foreground",
-              "transition-all ease-[cubic-bezier(0.22,1,0.36,1)]",
-              isMenuVisible ? "w-0 opacity-0" : "w-5 opacity-100",
-            )}
-            style={{ transitionDuration: `${ANIMATION_DURATION_MS}ms` }}
-          />
-          <span
-            className={cn(
-              "absolute left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-foreground",
-              "transition-all ease-[cubic-bezier(0.22,1,0.36,1)]",
-              isMenuVisible ? "top-1/2 -translate-y-1/2 -rotate-45 w-6" : "top-[18px] w-5",
-            )}
-            style={{ transitionDuration: `${ANIMATION_DURATION_MS}ms` }}
-          />
-        </div>
+        <MainMenuToggleIcon
+          isOpen={isMenuVisible}
+          transitionDurationMs={ANIMATION_DURATION_MS}
+        />
         <div
           className={cn(
             "absolute inset-0 rounded-full bg-primary/20 blur-xl transition-opacity duration-500",

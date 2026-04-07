@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User } from "@/src/shared/resources/icons"
 import { RegisterSchema } from "@/src/shared/validation/schemas"
 import { PasswordStrength } from "./PasswordStrength"
 import { cn } from "@/lib/utils"

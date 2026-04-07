@@ -48,6 +48,24 @@ describe("resolveTaskDraft debug modes", () => {
     }
   })
 
+  it("parses slug from description URL", async () => {
+    window.LT_DEBUG = { leetcodeResolveMode: "success" }
+
+    const promise = resolveTaskDraft({
+      source: "leetcode",
+      rawInput: "https://leetcode.com/problems/kth-largest-element-in-a-stream/description/",
+    })
+
+    await vi.advanceTimersByTimeAsync(900)
+    const resolved = await promise
+
+    expect(resolved.ok).toBe(true)
+    if (resolved.ok) {
+      expect(resolved.draft.url).toBe("https://leetcode.com/problems/kth-largest-element-in-a-stream/")
+      expect(resolved.draft.sourceMeta?.slug).toBe("kth-largest-element-in-a-stream")
+    }
+  })
+
   it("supports window.LT_DEBUG alias", async () => {
     delete window.__LT_DEBUG__
     window.LT_DEBUG = { leetcodeResolveMode: "failure" }

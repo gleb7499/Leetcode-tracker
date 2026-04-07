@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react"
-import { ExternalLink, Check, Minus, X } from "lucide-react"
+import { ExternalLink, Check, Minus, X } from "@/src/shared/resources/icons"
 import { REVIEW_FEEDBACK_OPTIONS, type ReviewFeedback } from "@/lib/review-feedback"
 import type { Task } from "@/src/shared/types"
 import { cn } from "@/lib/utils"
@@ -81,6 +81,21 @@ export function ReviewSession({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return
+      }
+
+      const target = e.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+
       if (e.code === "Digit1") {
         e.preventDefault()
         advanceToNextTask("remember")

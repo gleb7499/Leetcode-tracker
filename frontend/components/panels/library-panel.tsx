@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { Search, ChevronRight, CheckCircle2, Clock, AlertCircle } from "lucide-react"
+import { Search, ChevronRight, CheckCircle2, Clock, AlertCircle } from "@/src/shared/resources/icons"
 import { cn } from "@/lib/utils"
 import type { Task } from "@/src/shared/types"
 
