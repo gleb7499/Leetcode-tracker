@@ -1,33 +1,36 @@
-# Leetcode Tracker: Technical README
+# LeetCode Tracker: Developer README
 
-## 1. Назначение
+This document describes the technical baseline, implementation boundaries, and review conventions for LeetCode Tracker.
 
-Этот документ описывает технический контур проекта для разработки, планирования и ревью.
+## 1. Purpose
 
-## 2. Технологический baseline
+LeetCode Tracker is a personal learning product for algorithm practice, spaced repetition, and progress analysis.
 
-Обязательный стек:
+## 2. Technology baseline
 
-- Frontend: React + Vite + TypeScript
-- Backend: Java + Spring
-- Database: PostgreSQL
+The active target stack is:
 
-Если встречаются упоминания других технологий в старых файлах, они считаются неактуальными для новых задач.
+- frontend: React, Vite, and TypeScript;
+- backend: Java and Spring;
+- database: PostgreSQL.
 
-## 3. Текущее состояние
+References to alternative stacks in older files are historical and should not be used as the basis for new work.
 
-- В папке frontend находится рабочее клиентское приложение.
-- Папка backend является точкой развития серверной части на Java + Spring.
-- Архитектура движется от локального хранения к полноценной серверной модели с PostgreSQL.
+## 3. Current state
 
-## 4. Структура репозитория
+- `frontend` contains the active client application;
+- `backend` is the planned Java + Spring service boundary;
+- the architecture is moving from local browser storage toward a PostgreSQL-backed server model.
 
-- frontend: клиентское приложение на React + Vite + TypeScript
-- backend: серверный модуль на этапе развития
-- ТЗ.md: личный продуктово-технический документ
-- DATABASE_DIAGRAM.md: заметки по структуре данных
+## 4. Repository structure
 
-## 5. Локальная разработка
+- `frontend`: React + Vite + TypeScript client;
+- `backend`: backend service under development;
+- `PRODUCT_SPECIFICATION.md`: product and technical direction;
+- `DATABASE_DIAGRAM.md`: conceptual data model;
+- `BACKEND_FRONTEND_CONTRACT.md`: API and DTO contract.
+
+## 5. Local development
 
 ### Frontend
 
@@ -37,34 +40,36 @@ npm install
 npm run dev
 ```
 
-Дополнительно:
+Additional commands:
 
-- сборка: npm run build
-- линт: npm run lint
-- предпросмотр сборки: npm run preview
+```bash
+npm run build
+npm run lint
+npm run preview
+```
 
 ### Backend
 
-Backend развивается как Java + Spring сервис и должен проектироваться с расчётом на PostgreSQL как основную БД.
+The backend is being developed as a Java + Spring service designed around PostgreSQL as the primary database.
 
-## 6. Архитектурные принципы
+## 6. Architectural principles
 
-- Единый источник истины по данным находится на серверной стороне.
-- Логика интервального повторения должна быть воспроизводимой и тестируемой.
-- Модель данных должна поддерживать историю ревью и аналитические срезы.
-- Контракты API и DTO должны быть стабильными и версионируемыми.
-- Решения по хранению и миграциям принимаются с приоритетом PostgreSQL.
+- the server is the source of truth for user and learning data;
+- spaced-repetition logic must be deterministic and testable;
+- the data model must support review history and analytical views;
+- API contracts and DTOs must be stable and versioned;
+- PostgreSQL is the default choice for persistence and migrations.
 
-## 7. Направления backend-дизайна
+## 7. Backend design directions
 
-- Auth и управление сессиями.
-- Управление задачами и тегами.
-- Сервис повторений и перерасчёта расписания.
-- Сервис статистики.
-- Интеграционный слой уведомлений.
+- authentication and session management;
+- task and topic management;
+- review scheduling and interval recalculation;
+- statistics and reporting;
+- notifications and integrations.
 
-## 8. Документационные правила
+## 8. Documentation rules
 
-- Публичный README остаётся кратким и ориентированным на быстрое понимание проекта.
-- Технические детали и договорённости фиксируются в этом документе и связанных инженерных артефактах.
-- При расхождении описаний приоритет у актуального стека: React + Vite + TypeScript, Java + Spring, PostgreSQL.
+- the public README remains concise and product-oriented;
+- technical decisions belong in this document and the linked engineering artifacts;
+- when descriptions conflict, the current baseline is React + Vite + TypeScript, Java + Spring, and PostgreSQL.

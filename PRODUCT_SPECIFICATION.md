@@ -1,0 +1,102 @@
+# Product Specification
+
+## 1. Product concept
+
+LeetCode Tracker is a system for regular algorithm practice based on spaced repetition.
+
+The product should let users add problems, assess recall quality, automatically schedule future reviews, and understand both learning progress and upcoming workload.
+
+## 2. Technology baseline
+
+The current target stack is:
+
+- frontend: React, Vite, and TypeScript;
+- backend: Java and Spring;
+- database: PostgreSQL.
+
+Older technology references should be treated as historical notes rather than implementation guidance.
+
+## 3. Architecture
+
+The product is evolving toward a client/server architecture:
+
+1. **Web client**: tasks, reviews, statistics, and settings.
+2. **API and business logic**: tasks, reviews, scheduling, statistics, authentication, and access control.
+3. **PostgreSQL storage**: users, tasks, review history, schedules, and analytics.
+4. **Mobile direction**: an optional Android client and review reminders.
+
+## 4. Functional requirements
+
+### Task management
+
+- add problems manually;
+- support external links such as LeetCode URLs;
+- store notes, difficulty, topics, and user labels;
+- edit and delete tracked problems.
+
+### Review workflow
+
+- review one problem at a time;
+- review all problems due today;
+- record recall quality after each attempt.
+
+### Review outcomes
+
+- Don't Remember;
+- Partially Remember;
+- Remember Well.
+
+The selected outcome determines the next review date.
+
+### Progress and analytics
+
+- reviews per day;
+- successful and unsuccessful outcomes;
+- recall quality over time;
+- upcoming workload;
+- progress by topic, difficulty, and selected segments.
+
+### Synchronization and notifications
+
+Data should remain consistent across clients. Users should see the same task state after signing in on another device. The roadmap includes reminders for tasks due today, with Android notifications as the first priority and web notifications as a possible extension.
+
+## 5. Non-functional requirements
+
+- predictable and stable scheduling logic;
+- good performance for normal personal learning volumes;
+- secure authentication and protection of user data;
+- container-ready deployment;
+- scalability as the number of users and tasks grows.
+
+## 6. Conceptual data model
+
+The minimum domain includes users, tasks, topics, task/topic relationships, review history, schedules, authentication/session data, and analytics aggregates or views. PostgreSQL remains the required target database.
+
+## 7. Spaced repetition
+
+The system must support short intervals after poor recall, longer intervals after stable successful recall, recalculation after every review, and complete history retention for analytics and context recovery.
+
+## 8. Product screens
+
+- **Home**: tasks due today, quick access to review, and daily workload.
+- **Add task**: create a problem and enter its metadata.
+- **Review**: show the problem, collect the outcome, and move to the next task.
+- **Statistics**: activity, recall quality, and future workload.
+- **Settings**: review preferences, notifications, and interface options.
+
+## 9. Current status
+
+The frontend is active as a React + Vite + TypeScript application. The Java/Spring backend and PostgreSQL integration are the next major delivery stages. Local or temporary implementations are acceptable during this transition but must remain compatible with the target architecture.
+
+## 10. Roadmap
+
+1. Stabilize task and review flows.
+2. Implement the Java/Spring API.
+3. Connect PostgreSQL and migrate persistence to the server.
+4. Complete authentication and cross-device synchronization.
+5. Expand analytics and notifications.
+6. Develop the mobile client.
+
+## 11. Documentation priority
+
+When documents disagree, prioritize current owner decisions, this specification, and repository-level project instructions. Older stack descriptions are historical context.

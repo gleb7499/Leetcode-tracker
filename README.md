@@ -1,14 +1,28 @@
-# Leetcode Tracker
+# LeetCode Tracker
 
-Leetcode Tracker — проект для интервального повторения задач по алгоритмам и отслеживания прогресса обучения.
+LeetCode Tracker is a personal learning system for deliberate algorithm practice, spaced repetition, and long-term progress tracking.
 
-## Стек проекта
+The project combines a polished React interface with a backend-oriented domain model designed around tasks, review history, scheduling policies, topics, and learning analytics.
 
-- Frontend: React + Vite + TypeScript
-- Backend: Java + Spring
-- База данных: PostgreSQL
+## Product vision
 
-## Быстрый старт (frontend)
+- add and organize algorithm problems from external sources such as LeetCode;
+- review problems using a simple recall-quality workflow;
+- automatically schedule the next review date;
+- track progress, review outcomes, topics, difficulty, and future workload;
+- keep the domain model ready for server-side synchronization across devices.
+
+## Technology
+
+- Frontend: React, Vite, TypeScript, Tailwind CSS v4
+- Backend direction: Java, Spring, and PostgreSQL
+- Frontend quality: Vitest, Testing Library, type checking, and ESLint
+
+## Current status
+
+The frontend is the active working application and currently uses browser storage as an interim persistence layer. The Java/Spring backend and PostgreSQL integration are defined as the target server architecture and are documented in the API contract and product specification.
+
+## Run the frontend
 
 ```bash
 cd frontend
@@ -16,7 +30,35 @@ npm install
 npm run dev
 ```
 
-## Документация
+Useful checks:
 
-- Технический README для разработчиков: README.developers.md
-- Личное ТЗ проекта: ТЗ.md
+```bash
+npm run build
+npm run typecheck
+npm run lint
+npm run test
+```
+
+## Interface preview
+
+The repository includes captured interface states from the working frontend:
+
+| Sign in | Home | Review session |
+|---|---|---|
+| ![Sign in](./audit-login.png) | ![Home](./audit-home.png) | ![Review session](./audit-review-session.png) |
+
+| Library panel | Expanded library | Profile panel |
+|---|---|---|
+| ![Library panel](./audit-library-panel.png) | ![Expanded library](./audit-library-expanded.png) | ![Profile panel](./audit-profile-panel.png) |
+
+## Documentation
+
+- [Developer README](README.developers.md)
+- [Frontend current state](FRONTEND_CURRENT_STATE.md)
+- [Backend/frontend contract](BACKEND_FRONTEND_CONTRACT.md)
+- [Database model](DATABASE_DIAGRAM.md)
+- [Product specification](PRODUCT_SPECIFICATION.md)
+
+## License
+
+This project is available under the [Creative Commons Attribution-NonCommercial 4.0 International license](LICENSE). Attribution to Loginov Gleb is required; commercial use is not permitted.

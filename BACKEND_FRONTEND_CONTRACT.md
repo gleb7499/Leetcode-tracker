@@ -1,208 +1,86 @@
-# BACKEND_FRONTEND_CONTRACT
+# Backend/Frontend Contract
 
-## 1. Назначение
+This document defines the interaction contract between the React + Vite + TypeScript frontend and the planned Java + Spring backend of LeetCode Tracker.
 
-Этот документ фиксирует контракт взаимодействия между frontend (React + Vite + TypeScript) и backend (Java + Spring) для Leetcode Tracker.
+## Contract levels
 
-Документ разделён на два уровня:
+- **MVP now**: required for replacing the current browser-storage implementation with a working backend.
+- **Phase 2**: useful extensions that do not block the current UI.
 
-- Обязательно сейчас (MVP NOW): без этого текущий frontend логически не сможет работать после отключения localStorage-моков.
-- Следующий этап (PHASE 2): полезно, но не блокирует запуск текущего UI.
+## API conventions
 
-## 2. Что реально нужно текущему frontend
-
-| Экран/поток | Что нужно от backend |
+| Rule | Value |
 |---|---|
-| Login/Register | Вход, регистрация, проверка текущей сессии, выход |
-| Home | Список задач на сегодня (уже готовых к повторению), удаление задачи |
-| Add Task | Добавление задачи в кабинет пользователя |
-| Review | Получение данных задачи и запись результата повторения |
-| Forgot Password modal | Безопасный endpoint с одинаковым ответом (без раскрытия существования email) |
-| Stats/Settings | Пока заглушки, для MVP не блокируют работоспособность |
+| Base prefix | `/api/v1` |
+| Payload format | `application/json; charset=utf-8` |
+| JSON fields | camelCase |
+| Datetime | ISO 8601 UTC |
+| Date | `YYYY-MM-DD` |
+| Tracing | every response contains `requestId` |
 
-## 3. Базовые правила API
+Authentication responses must include `success` and `message`. Successful login, registration, and session checks also return a `user` object with `id`, `email`, and `name`.
 
-| Правило | Значение |
-|---|---|
-| Базовый префикс | /api/v1 |
-| Формат данных | application/json; charset=utf-8 |
-| Формат полей JSON | camelCase |
-| Формат datetime | ISO 8601 UTC |
-| Формат date | YYYY-MM-DD |
-| Трассировка | каждый ответ содержит requestId |
+## MVP authentication endpoints
 
-## 4. Совместимость с текущим frontend (обязательно)
-
-Текущий frontend ожидает в auth-потоках понятный результат операции:
-
-- success: boolean
-- message: string
-
-Поэтому для auth-endpoints это поле обязательно в ответе.
-
-## 5. Обязательно сейчас (MVP NOW)
-
-### 5.1 Auth endpoints
-
-| Метод | Маршрут | Назначение | Обязательно |
-|---|---|---|---|
-| POST | /api/v1/auth/login | Вход пользователя | Да |
-| POST | /api/v1/auth/register | Регистрация пользователя | Да |
-| GET | /api/v1/auth/me | Получение текущего пользователя по сессии | Да |
-| POST | /api/v1/auth/logout | Выход из сессии | Да |
-| POST | /api/v1/auth/forgot-password | Запрос восстановления пароля | Да |
-
-Контракт запросов:
-
-- login request: email, password, remember
-- register request: name, email, password
-- forgot-password request: email
-
-Контракт ответов (auth):
-
-- success: boolean
-- message: string
-- user: object (для login/register/me при success = true)
-
-Контракт user:
-
-- id
-- email
-- name
-
-Требование безопасности для forgot-password:
-
-- ответ должен быть одинаково нейтральным вне зависимости от существования email.
-
-### 5.2 Контракт данных задачи для текущего UI
-
-Backend может иметь любую внутреннюю схему, но для текущего frontend должен отдавать DTO, достаточный для рендера без потери функциональности.
-
-Контракт FrontendTask:
-
-- id
-- name
-- url
-- difficulty (Easy | Medium | Hard)
-- topics: string[]
-- notes
-- createdAt
-- nextReview
-- reviews: array of { date, status }
-
-Контракт ReviewStatus:
-
-- forgot
-- partial
-- remember
-
-### 5.3 User tasks endpoints (MVP)
-
-| Метод | Маршрут | Назначение | Обязательно |
-|---|---|---|---|
-| GET | /api/v1/me/tasks/today | Список задач на сегодня для главного экрана | Да |
-| GET | /api/v1/me/tasks/{taskId} | Получить задачу по id для экрана review | Да |
-| POST | /api/v1/me/tasks | Добавить задачу в кабинет | Да |
-| DELETE | /api/v1/me/tasks/{taskId} | Удалить задачу из кабинета | Да |
-| POST | /api/v1/me/tasks/{taskId}/reviews | Записать результат повторения | Да |
-
-Контракт add-task request:
-
-- name
-- url
-- difficulty
-- topics (допускается string CSV или string[]; backend обязан нормализовать)
-- notes
-
-Контракт record-review request:
-
-- status (forgot | partial | remember)
-
-Семантика статусов для планирования следующего показа (single source of truth):
-
-- remember: увеличить интервал до следующего показа задачи;
-- partial: оставить интервал без изменения;
-- forgot: сократить интервал до следующего показа задачи.
-
-Важно:
-
-- frontend не раскрывает пользователю детали алгоритма повторения;
-- frontend передаёт только пользовательскую самооценку (status);
-- конкретный расчёт nextReview полностью выполняется на backend.
-
-Контракт record-review response:
-
-- success
-- message
-- task (обновлённый FrontendTask с новым nextReview и расширенным reviews)
-
-### 5.4 Динамический жизненный цикл TASKS (обязательно)
-
-Это обязательное поведение backend, скрытое от конечного пользователя.
-
-При добавлении задачи:
-
-- backend вычисляет внутренний identityKey;
-- ищет существующую TASKS по identityKey;
-- если запись есть, не создаёт дубль TASKS и создаёт только связь пользователя с задачей;
-- если записи нет, создаёт TASKS и затем связь пользователя с задачей.
-
-При удалении задачи из кабинета:
-
-- backend удаляет связь текущего пользователя с задачей;
-- проверяет, остались ли ссылки от других пользователей;
-- если ссылки есть, TASKS не удаляется;
-- если ссылок нет, TASKS удаляется вместе со связями TASK_TOPICS.
-
-Технические требования:
-
-- add/remove выполняются транзакционно;
-- система устойчива к конкурентным запросам;
-- удаление идемпотентно с пользовательской точки зрения.
-
-### 5.5 Ошибки для MVP
-
-| HTTP | code | Когда используется |
+| Method | Route | Purpose |
 |---|---|---|
-| 400 | BAD_REQUEST | Некорректный формат входных данных |
-| 401 | UNAUTHORIZED | Нет валидной сессии |
-| 404 | NOT_FOUND | Задача или пользовательский ресурс не найден |
-| 409 | CONFLICT | Дубликат или конфликт бизнес-инварианта |
-| 422 | VALIDATION_ERROR | Ошибка доменной валидации |
-| 500 | INTERNAL_ERROR | Внутренняя ошибка backend |
+| POST | `/api/v1/auth/login` | Sign in |
+| POST | `/api/v1/auth/register` | Create an account |
+| GET | `/api/v1/auth/me` | Resolve the current session |
+| POST | `/api/v1/auth/logout` | Sign out |
+| POST | `/api/v1/auth/forgot-password` | Request password recovery |
 
-## 6. Следующий этап (PHASE 2)
+The password recovery endpoint must return the same neutral response whether or not the email exists.
 
-Эти контракты не обязательны для запуска текущего frontend, но нужны для развития продукта.
+## Task model
 
-### 6.1 Справочники
+The frontend task DTO contains:
 
-- GET /api/v1/dictionaries/difficulty
-- GET /api/v1/dictionaries/states
-- GET /api/v1/dictionaries/topics
-- GET /api/v1/dictionaries/review-policies
+- `id`, `name`, `url`, `difficulty`, `topics`, `notes`;
+- `createdAt`, `nextReview`;
+- `reviews: { date, status }[]`.
 
-### 6.2 Расширенный каталог задач
+Review statuses are `forgot`, `partial`, and `remember`. The frontend sends only the user's self-assessment; the backend is the single source of truth for calculating `nextReview`.
 
-- GET /api/v1/tasks
-- GET /api/v1/tasks/{taskId}
-- PATCH /api/v1/tasks/{taskId}
+## User task endpoints
 
-### 6.3 Статистика
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/api/v1/me/tasks/today` | List tasks due today |
+| GET | `/api/v1/me/tasks/{taskId}` | Load a review task |
+| POST | `/api/v1/me/tasks` | Add a task to the user's library |
+| DELETE | `/api/v1/me/tasks/{taskId}` | Remove a task from the user's library |
+| POST | `/api/v1/me/tasks/{taskId}/reviews` | Record a review outcome |
 
-- GET /api/v1/me/stats/overview
-- GET /api/v1/me/stats/daily-activity
-- GET /api/v1/me/stats/outcomes
-- GET /api/v1/me/stats/load-forecast
+Adding a task accepts `name`, `url`, `difficulty`, `topics`, and `notes`. Recording a review accepts `status` and returns the updated task with its new schedule and review history.
 
-### 6.4 Общие платформенные расширения
+## Scheduling semantics
 
-- расширенная пагинация и сортировка;
-- rate limiting и observability-политики;
-- контрактная версионизация с отдельным /api/v2 при breaking changes.
+- `remember`: increase the interval before the next review;
+- `partial`: keep the current interval;
+- `forgot`: shorten the interval.
 
-## 7. Правила эволюции контракта
+The algorithm remains hidden from the user interface and is calculated entirely by the backend.
 
-- Любое изменение MVP-endpoints сначала фиксируется в этом документе.
-- Если изменение ломает текущий frontend, оно не может попадать в ту же версию API.
-- Перед внедрением backend/frontend должны синхронно подтвердить DTO и коды ошибок.
+## Shared task lifecycle
+
+The backend computes an internal `identityKey` for each problem. Existing tasks are reused instead of duplicated, while `USER_TASKS` stores each user's relationship with the shared task. Removing a task deletes only the user's relationship; the shared task is removed only when no users reference it. Add/remove operations must be transactional, concurrency-safe, and idempotent from the user's perspective.
+
+## Error model
+
+| HTTP | Code | Meaning |
+|---|---|---|
+| 400 | `BAD_REQUEST` | Invalid request format |
+| 401 | `UNAUTHORIZED` | Missing or invalid session |
+| 404 | `NOT_FOUND` | Resource not found |
+| 409 | `CONFLICT` | Duplicate or business conflict |
+| 422 | `VALIDATION_ERROR` | Domain validation failed |
+| 500 | `INTERNAL_ERROR` | Unexpected backend failure |
+
+## Phase 2
+
+Planned extensions include difficulty/state/topic dictionaries, a shared task catalog, statistics endpoints, pagination, sorting, rate limiting, observability, and a versioned `/api/v2` when breaking changes become necessary.
+
+## Evolution rules
+
+Changes to MVP endpoints are recorded here first. Breaking changes must use a new API version, and frontend/backend DTOs and error codes must be reviewed together before implementation.

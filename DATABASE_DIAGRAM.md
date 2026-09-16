@@ -1,28 +1,22 @@
-# DATABASE_DIAGRAM
+# Database Model
 
-Логическая ER-диаграмма структуры данных Leetcode Tracker в виде табличек.
+This document describes the logical data model for LeetCode Tracker.
 
-Ключевые архитектурные правила:
+## Architectural rules
 
-- Источник истины для истории повторений: USER_REVIEWS.
-- USER_TASKS хранит оперативный срез (текущее состояние и ближайшую дату повторения).
-- Связь между задачами и темами реализована как many-to-many через TASK_TOPICS.
-- Пользовательские таблицы из старого вида `<user_id>_*` нормализованы в общие таблицы с полем `user_id`.
-- Конечный пользователь работает только со своими задачами, а общий жизненный цикл TASKS управляется сервером прозрачно.
+- `USER_REVIEWS` is the source of truth for review history.
+- `USER_TASKS` stores the operational snapshot and the next review date.
+- `TASK_TOPICS` implements the many-to-many relationship between tasks and topics.
+- Legacy user-specific tables are normalized into shared tables with `user_id`.
+- Users interact only with their own tasks; the server manages the shared task lifecycle transparently.
 
-Критичные ограничения целостности:
+## Integrity constraints
 
-- UNIQUE(user_id, task_id) в USER_TASKS.
-- UNIQUE(task_id, topic_id) в TASK_TOPICS.
-- UNIQUE(identity_key) в TASKS.
-- ON DELETE CASCADE: USERS -> USER_TASKS, TASKS -> USER_TASKS, USER_TASKS -> USER_REVIEWS, TASKS -> TASK_TOPICS, TOPICS -> TASK_TOPICS.
-- Уникальность справочников: TOPICS.name, DIFFICULTY.level, STATES.code.
-
-Цветовая легенда диаграммы:
-
-- Светло-голубой: справочники.
-- Светло-зелёный: оперативные таблицы.
-- Светло-песочный: отчётные таблицы.
+- `UNIQUE(user_id, task_id)` in `USER_TASKS`;
+- `UNIQUE(task_id, topic_id)` in `TASK_TOPICS`;
+- `UNIQUE(identity_key)` in `TASKS`;
+- cascading deletes from users/tasks to relationships and review history;
+- unique dictionary values for topic names, difficulty levels, and state codes.
 
 ```mermaid
 erDiagram
@@ -34,18 +28,15 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-
     DIFFICULTY {
         int id PK
         varchar level UK
     }
-
     STATES {
         int id PK
         varchar code UK
         varchar label
     }
-
     REVIEW_POLICIES {
         int state_id PK
         int base_interval_days
@@ -53,7 +44,6 @@ erDiagram
         int max_interval_days
         bool is_active
     }
-
     TASKS {
         bigint id PK
         varchar identity_key UK
@@ -66,21 +56,18 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-
     TOPICS {
         bigint id PK
         varchar name UK
         varchar slug UK
         datetime created_at
     }
-
     TASK_TOPICS {
         bigint id PK
         bigint task_id FK
         bigint topic_id FK
         datetime created_at
     }
-
     USER_TASKS {
         bigint id PK
         bigint user_id FK
@@ -92,7 +79,6 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-
     USER_REVIEWS {
         bigint id PK
         bigint user_task_id FK
@@ -103,105 +89,37 @@ erDiagram
         text review_text
         datetime created_at
     }
-
     DIFFICULTY ||--o{ TASKS : difficulty
     TASKS ||--o{ TASK_TOPICS : has_topics
     TOPICS ||--o{ TASK_TOPICS : maps
-
     USERS ||--o{ USER_TASKS : tracks
     TASKS ||--o{ USER_TASKS : assigned
     STATES ||--o{ USER_TASKS : current_state
-
     USER_TASKS ||--o{ USER_REVIEWS : review_history
     STATES ||--o{ USER_REVIEWS : outcome
-
     STATES ||--|| REVIEW_POLICIES : interval_policy
-
-    classDef reference fill:#eef6ff,stroke:#7aa7d9,stroke-width:1px,color:#1f2a44
-    classDef operational fill:#edf9f1,stroke:#66a182,stroke-width:1px,color:#1e3a2b
-    classDef reporting fill:#fff6e8,stroke:#d2a45b,stroke-width:1px,color:#4b3315
-
-    class DIFFICULTY,STATES,TOPICS,REVIEW_POLICIES reference
-    class USERS,TASKS,TASK_TOPICS,USER_TASKS operational
-    class USER_REVIEWS reporting
-
 ```
 
-## Пояснения по категориям таблиц
+## Table groups
 
-### Справочники
+### Reference tables
 
-#### DIFFICULTY
+- `DIFFICULTY`: problem difficulty levels.
+- `STATES`: review outcomes.
+- `TOPICS`: normalized problem topics.
+- `REVIEW_POLICIES`: interval rules for each review outcome.
 
-Что хранит: справочник уровней сложности задач.
+### Operational tables
 
-Пример данных: id = 2, level = medium.
+- `USERS`: accounts and profile attributes.
+- `TASKS`: shared problem cards and deduplication identity keys.
+- `TASK_TOPICS`: task/topic relationships.
+- `USER_TASKS`: the user's current tracking state for a task.
 
-#### STATES
+### Reporting table
 
-Что хранит: справочник исходов повторения.
+- `USER_REVIEWS`: the complete review history used for analytics and learning trends.
 
-Пример данных: id = 1, code = dont_remember, label = Не помню.
+## Task lifecycle
 
-#### TOPICS
-
-Что хранит: справочник тем, которые можно назначать задачам.
-
-Пример данных: id = 5, name = Dynamic Programming, slug = dynamic-programming.
-
-#### REVIEW_POLICIES
-
-Что хранит: правила расчёта интервалов для каждого состояния из STATES.
-
-Пример данных: state_id = 3, base_interval_days = 7, growth_factor = 1.8, max_interval_days = 120, is_active = true.
-
-### Оперативные таблицы
-
-#### USERS
-
-Что хранит: учётные записи пользователей системы.
-
-Пример данных: id = 12, email = <anna.dev@example.com>, name = Anna, created_at = 2026-04-01 10:00:00.
-
-#### TASKS
-
-Что хранит: общую карточку задачи, не привязанную к конкретному пользователю, включая внутренний ключ идентичности для дедупликации.
-
-Пример данных: id = 101, identity_key = lc:1, source_type = leetcode, source_problem_id = 1, title = Two Sum, difficulty_id = 1.
-
-#### TASK_TOPICS
-
-Что хранит: связь многие-ко-многим между задачами и темами.
-
-Пример данных: id = 900, task_id = 101, topic_id = 5.
-
-#### USER_TASKS
-
-Что хранит: факт отслеживания конкретной задачи конкретным пользователем и её текущее состояние.
-
-Пример данных: id = 3001, user_id = 12, task_id = 101, current_state_id = 2, last_review_date = 2026-03-30, next_review_date = 2026-04-02.
-
-### Отчётные таблицы
-
-#### USER_REVIEWS
-
-Что хранит: полную историю всех повторений пользователя по задаче; используется как источник истины для аналитики и динамики обучения.
-
-Пример данных: id = 70001, user_task_id = 3001, state_id = 3, reviewed_at = 2026-04-01 08:40:00, interval_days = 7, next_review_date = 2026-04-08.
-
-## Жизненный цикл задачи в TASKS
-
-### При добавлении задачи в кабинет пользователя
-
-- Backend вычисляет внутренний `identity_key` по данным входной задачи.
-- Если задача с таким ключом уже есть в TASKS, сервер не создаёт дубль и создаёт только связь в USER_TASKS.
-- Если задачи нет, сервер создаёт запись в TASKS, после этого создаёт связь в USER_TASKS.
-- Для пользователя это единый сценарий: задача добавлена.
-
-### При удалении задачи из кабинета пользователя
-
-- Backend удаляет связь пользователя в USER_TASKS.
-- Затем backend проверяет, остались ли другие ссылки на этот `task_id` в USER_TASKS.
-- Если ссылки остались, TASKS сохраняется.
-- Если ссылок больше нет, backend удаляет orphan-запись из TASKS и связанные TASK_TOPICS.
-- Для пользователя это единый сценарий: задача удалена из его списка.
+When a user adds a problem, the backend calculates `identity_key`, reuses an existing `TASKS` record where possible, and creates the user's `USER_TASKS` relationship. When a user removes a problem, only that relationship is removed; the shared task remains while other users reference it.

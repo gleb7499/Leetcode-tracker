@@ -1,88 +1,57 @@
-# Текущее состояние фронтенда
+# Frontend Current State
 
-## Оглавление
+This document records the current working state of the frontend and provides a concise guide for development and review.
 
-- [Цель документа](#цель-документа)
-- [Канонические источники](#канонические-источники)
-- [Карта фронтенд-части](#карта-фронтенд-части)
-- [Состояние приложения frontend](#состояние-приложения-frontend)
-- [Запуск и проверки](#запуск-и-проверки)
-- [Примеры интерфейса из корня](#примеры-интерфейса-из-корня)
-- [Ограничения текущей реализации](#ограничения-текущей-реализации)
+## Canonical sources
 
-## Цель документа
+- [Public project overview](README.md)
+- [Developer baseline](README.developers.md)
+- [Backend/frontend contract](BACKEND_FRONTEND_CONTRACT.md)
+- [Product specification](PRODUCT_SPECIFICATION.md)
 
-Этот файл фиксирует фактическое состояние фронтенд-части в репозитории на текущий момент и помогает быстро понять текущее рабочее состояние UI.
+## Frontend map
 
-## Канонические источники
+The repository contains one active client implementation:
 
-- Базовое описание проекта: [README.md](README.md)
-- Технический baseline и правила: [README.developers.md](README.developers.md)
-- Контракт взаимодействия frontend/backend: [BACKEND_FRONTEND_CONTRACT.md](BACKEND_FRONTEND_CONTRACT.md)
-- Продуктовый контекст и направления: [ТЗ.md](ТЗ.md)
+- `frontend`: React + Vite + TypeScript application with component-driven UX, panels, review flows, and tests.
 
-## Карта фронтенд-части
+The current UI uses browser storage as an interim persistence layer while the server contract is being implemented.
 
-В репозитории поддерживается одна клиентская реализация:
+## Current application behavior
 
-- `frontend` - актуальная версия интерфейса на React + Vite + TypeScript с расширенным UX, компонентной компоновкой, панелями и тестами.
+- `RootLayout` provides the application shell and `AmbientBackground` provides the visual background layer.
+- Home and review modes switch through view state with a smooth transition.
+- Navigation and secondary actions are handled by `ProfileMenu` and `SidePanel`.
+- Adding a task uses `AddTaskFab` and the `AddTaskModal` flow.
+- Logout is confirmed through `ConfirmDialog`.
+- Authentication and task data currently use local browser storage.
 
-Текущая реализация сейчас работает в локальном режиме хранения данных (через browser storage), что соответствует этапу до полной серверной интеграции.
+## Quality tooling
 
-## Состояние приложения frontend
+Available scripts include `dev`, `build`, `preview`, `typecheck`, `lint`, `test`, and `test:watch`. The project uses Tailwind CSS v4, Vitest, and Testing Library. Unit tests cover URL validation, review feedback, progress, scheduling, and reducer flows.
 
-Текущее поведение:
+## Run and verify
 
-- Приложение построено вокруг `RootLayout` и фонового слоя `AmbientBackground`.
-- Домашний и review-режимы переключаются через состояние view с плавным переходом.
-- Навигация и вспомогательные действия вынесены в `ProfileMenu` и `SidePanel`.
-- Добавление задачи реализовано через FAB (`AddTaskFab`) и модальный flow (`AddTaskModal`).
-- Logout подтверждается через `ConfirmDialog`.
-- Аутентификация и задачи работают через локальное storage-хранилище.
+```bash
+cd frontend
+npm install
+npm run dev
+npm run typecheck
+npm run lint
+npm run test
+```
 
-Технические признаки:
+## Interface references
 
-- Скрипты: `dev`, `build`, `preview`, `typecheck`, `lint`, `test`, `test:watch`.
-- Используются Tailwind CSS v4, Vitest, Testing Library.
-- Есть unit-тесты в `src/__tests__` (валидация URL, review-feedback, прогресс, расписание и reducer-flow).
-- Типы задач расширены полями источника (`source`, `sourceMeta`) и режимом планирования (`scheduleMode`).
+The root of the repository contains captured UI states:
 
-## Запуск и проверки
+- sign-in: [audit-login.png](audit-login.png);
+- home: [audit-home.png](audit-home.png);
+- library panel: [audit-library-panel.png](audit-library-panel.png);
+- expanded library: [audit-library-expanded.png](audit-library-expanded.png);
+- review session: [audit-review-session.png](audit-review-session.png);
+- profile panel: [audit-profile-panel.png](audit-profile-panel.png).
 
-1. Перейти в папку `frontend`.
-2. Установить зависимости: `npm install`.
-3. Запуск разработки: `npm run dev`.
-4. Проверки качества: `npm run typecheck`, `npm run lint`, `npm run test`.
+## Current limitations
 
-## Примеры интерфейса из корня
-
-Ниже изображения из корня репозитория как референс текущего UI.
-
-### Экран входа
-
-![Экран входа](./audit-login.png)
-
-### Домашний экран
-
-![Домашний экран](./audit-home.png)
-
-### Панель библиотеки
-
-![Панель библиотеки](./audit-library-panel.png)
-
-### Раскрытая библиотека
-
-![Раскрытая библиотека](./audit-library-expanded.png)
-
-### Сессия повторения
-
-![Сессия повторения](./audit-review-session.png)
-
-### Панель профиля
-
-![Панель профиля](./audit-profile-panel.png)
-
-## Ограничения текущей реализации
-
-- Текущий фронтенд пока использует локальное хранилище вместо backend API.
-- Для production-ready сценариев потребуется перенос auth/tasks/review операций на backend-контракт из [BACKEND_FRONTEND_CONTRACT.md](BACKEND_FRONTEND_CONTRACT.md).
+The frontend still uses local storage instead of the backend API. Production synchronization will require moving authentication, task management, and review operations to the contract defined in `BACKEND_FRONTEND_CONTRACT.md`.
