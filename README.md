@@ -45,15 +45,11 @@ The repository includes captured interface states from the working frontend:
 
 | Sign in | Home | Review session |
 |---|---|---|
-| ![Sign in](./docs/screenshots/audit-login.png) | ![Home](./docs/screenshots/audit-home.png) | ![Review session](./docs/screenshots/audit-review-session.png) |
+| ![Sign in](./audit-login.png) | ![Home](./audit-home.png) | ![Review session](./audit-review-session.png) |
 
 | Library panel | Expanded library | Profile panel |
 |---|---|---|
-| ![Library panel](./docs/screenshots/audit-library-panel.png) | ![Expanded library](./docs/screenshots/audit-library-expanded.png) | ![Profile panel](./docs/screenshots/audit-profile-panel.png) |
-
-| Registration | Open home menu |
-|---|---|
-| ![Registration](./docs/screenshots/audit-register.png) | ![Open home menu](./docs/screenshots/audit-home-menu-open.png) |
+| ![Library panel](./audit-library-panel.png) | ![Expanded library](./audit-library-expanded.png) | ![Profile panel](./audit-profile-panel.png) |
 
 ## Documentation
 
