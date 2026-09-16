@@ -51,6 +51,10 @@ The repository includes captured interface states from the working frontend:
 |---|---|---|
 | ![Library panel](./audit-library-panel.png) | ![Expanded library](./audit-library-expanded.png) | ![Profile panel](./audit-profile-panel.png) |
 
+| Registration | Open home menu |
+|---|---|
+| ![Registration](./audit-register.png) | ![Open home menu](./audit-home-menu-open.png) |
+
 ## Documentation
 
 - [Developer README](README.developers.md)
