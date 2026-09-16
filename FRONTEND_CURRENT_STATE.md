@@ -45,12 +45,12 @@ npm run test
 
 The root of the repository contains captured UI states:
 
-- sign-in: [audit-login.png](audit-login.png);
-- home: [audit-home.png](audit-home.png);
-- library panel: [audit-library-panel.png](audit-library-panel.png);
-- expanded library: [audit-library-expanded.png](audit-library-expanded.png);
-- review session: [audit-review-session.png](audit-review-session.png);
-- profile panel: [audit-profile-panel.png](audit-profile-panel.png).
+- sign-in: [audit-login.png](docs/screenshots/audit-login.png);
+- home: [audit-home.png](docs/screenshots/audit-home.png);
+- library panel: [audit-library-panel.png](docs/screenshots/audit-library-panel.png);
+- expanded library: [audit-library-expanded.png](docs/screenshots/audit-library-expanded.png);
+- review session: [audit-review-session.png](docs/screenshots/audit-review-session.png);
+- profile panel: [audit-profile-panel.png](docs/screenshots/audit-profile-panel.png).
 
 ## Current limitations
 
