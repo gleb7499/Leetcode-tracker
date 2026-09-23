@@ -107,14 +107,17 @@ function refreshTokens(): Promise<boolean> {
 }
 
 export interface ApiFetchOptions {
-  method?: "GET" | "POST" | "PUT" | "DELETE"
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
   body?: unknown
   /** Set false for unauthenticated endpoints (login/register/refresh). Default true. */
   auth?: boolean
+  /** "json" (default) parses the JSON body; "blob" returns the raw body as Blob; "none" returns undefined. */
+  responseType?: "json" | "blob" | "none"
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}, retried = false): Promise<T> {
   const { method = "GET", body, auth = true } = options
+  const responseType = options.responseType ?? "json"
 
   const headers: Record<string, string> = {}
   if (body !== undefined) headers["Content-Type"] = "application/json"
@@ -147,8 +150,12 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}, r
     throw await parseError(response)
   }
 
-  if (response.status === 204) {
+  if (response.status === 204 || responseType === "none") {
     return undefined as T
+  }
+
+  if (responseType === "blob") {
+    return (await response.blob()) as T
   }
 
   return (await response.json()) as T

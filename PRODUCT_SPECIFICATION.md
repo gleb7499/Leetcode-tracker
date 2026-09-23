@@ -100,6 +100,8 @@ Stage 4 done (2026-09): statistics endpoints under /api/v1/me/stats — summary 
 
 Stage 5 done (2026-09): frontend fully integrated with the backend per contract — shared API client (typed errors, token refresh rotation), auth/tasks/review/stats over HTTP, local storage removed for domain data, Vite /api proxy. Manual browser E2E passed; screenshots in docs/screenshots/.
 
+Stage 6 done (2026-09): user settings + review-policy presets on the backend (V4 migration, `GET/PATCH /api/v1/me/settings`, `GET /api/v1/review-policies`; the chosen preset drives interval recalculation in the review flow), backup export/import (`GET/POST /api/v1/me/backup`, idempotent, no secrets in the file), password change with refresh revocation, account deletion with cascades. Settings panel on the frontend covers policy choice, UI options, backup, password change and account deletion. Contract extended; Testcontainers integration tests cover the round-trip export → wipe → import, preset-driven intervals, idempotent import, cascade deletion and session revocation.
+
 Owner decision (2026-09): the project is a pet/open-source product. It is not deployed to the cloud and not monetized. The final form is a repository anyone can clone and run locally via Docker, positioned as local-first — user data lives only on their own machine. At the same time the architecture stays container-ready: the owner can deploy it on a real server at any time by changing only the environment configuration (including real SMTP for email). The step-by-step plan for this goal is maintained in [ROADMAP.md](ROADMAP.md) and takes precedence over the general roadmap below.
 
 ## 10. Roadmap

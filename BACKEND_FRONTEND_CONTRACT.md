@@ -121,6 +121,46 @@ Streak algorithm: the number of consecutive UTC calendar days with at least one 
 
 Statistics error responses follow the shared error model (e.g. unauthenticated requests get `401 UNAUTHORIZED`).
 
+## Settings endpoints (Stage 6)
+
+All settings endpoints are scoped to the authenticated user. `reviewTime` is serialized as ISO local time (`HH:mm:ss`); the PATCH endpoint accepts `HH:mm`.
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/api/v1/review-policies` | List named review-policy presets (id, code, name, description, builtIn, per-outcome `values[]`) |
+| GET | `/api/v1/me/settings` | Read the user's settings (row is created lazily on first PATCH) |
+| PATCH | `/api/v1/me/settings` | Partial update: `reviewPolicyPresetId` (0 resets to the global default policy), `notificationsEnabled`, `soundEffectsEnabled`, `dailyGoal` (1–100), `reviewTime` |
+
+The chosen preset changes the interval recalculation in the review flow: per-outcome `baseIntervalDays` / `growthFactor` / `maxIntervalDays` replace the global `review_policies` values for that user. Without a preset the global policy applies. Unknown preset id or out-of-range `dailyGoal` → `422 VALIDATION_ERROR`.
+
+## Account management endpoints (Stage 6)
+
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/api/v1/me/change-password` | Body `{ "currentPassword", "newPassword" }`. Wrong current password → `401`; on success the password is changed and **all refresh tokens are revoked** |
+| DELETE | `/api/v1/me` | Body `{ "password" }`. Wrong password → `401`. On success (HTTP 204) the user and all their data (tasks, review history, settings, tokens) are deleted via DB cascades |
+
+## Backup endpoints (Stage 6)
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/api/v1/me/backup` | Full export of the user's data as a JSON attachment (`Content-Disposition: attachment; filename="leetcode-tracker-backup.json"`) |
+| POST | `/api/v1/me/backup` | Idempotent import of the same JSON structure |
+
+Backup JSON (camelCase, no password hashes, no tokens, no internal ids):
+
+```
+{ "format": "leetcode-tracker-backup", "version": 1, "exportedAt": ISO,
+  "user": { "email", "name", "createdAt" },
+  "settings": { "reviewPolicyPresetCode", "notificationsEnabled", "soundEffectsEnabled", "dailyGoal", "reviewTime" },
+  "tasks": [ { "identityKey", "title", "link", "sourceType", "sourceProblemId", "sourceMeta",
+               "difficulty", "topics[]", "notes", "scheduleMode", "currentState",
+               "lastReviewDate", "nextReviewDate", "createdAt",
+               "reviews": [ { "state", "reviewedAt", "intervalDays", "nextReviewDate", "reviewText" } ] } ] }
+```
+
+Import semantics: shared task cards are matched by `identityKey` (created when missing), the user's relation by (user, identityKey), reviews by (state, `reviewedAt`) — importing the same file twice creates no duplicates. Statistics need no separate restore: they are computed from the restored `user_reviews`/`user_tasks`. Errors: malformed JSON → `400 BAD_REQUEST`; wrong `format`/`version`, unknown difficulty/state/scheduleMode, missing `identityKey`/`title` → `422 VALIDATION_ERROR`.
+
 ## Phase 2
 
 Planned extensions include difficulty/state/topic dictionaries, a shared task catalog, statistics endpoints, pagination, sorting, rate limiting, observability, and a versioned `/api/v2` when breaking changes become necessary.
