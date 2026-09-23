@@ -89,6 +89,38 @@ The backend computes an internal `identityKey` for each problem. Existing tasks 
 | 422 | `VALIDATION_ERROR` | Domain validation failed |
 | 500 | `INTERNAL_ERROR` | Unexpected backend failure |
 
+## Statistics endpoints
+
+All statistics are scoped to the authenticated user and computed on the fly from `user_tasks` and the review history (`user_reviews`); there is no separate reporting table.
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/api/v1/me/stats` | Summary counters |
+| GET | `/api/v1/me/stats/difficulty` | Task counts per difficulty |
+| GET | `/api/v1/me/stats/sources` | Task counts per source |
+| GET | `/api/v1/me/stats/recall` | Review outcome totals |
+| GET | `/api/v1/me/stats/workload?days=N` | Per-day upcoming review counts |
+
+`GET /api/v1/me/stats` returns `{"totalTasks","activeTasks","reviewedTasks","totalReviews","streakDays"}`:
+
+- `totalTasks` — all tasks in the user's library (`user_tasks`).
+- `activeTasks` — tasks with `scheduleMode = "spaced_repetition"` (included in the review queue).
+- `reviewedTasks` — distinct tasks with at least one recorded review.
+- `totalReviews` — all reviews of the user.
+- `streakDays` — review streak, see below.
+
+Streak algorithm: the number of consecutive UTC calendar days with at least one review, counting backwards from today. If the user has not reviewed anything today yet, the streak is not broken: counting starts from yesterday. An empty history yields `0`.
+
+`GET /api/v1/me/stats/difficulty` returns `[{"difficulty":"EASY","count":n}, ...]` in the fixed order `EASY`, `MEDIUM`, `HARD`; levels with no tasks are included with `count: 0`.
+
+`GET /api/v1/me/stats/sources` returns `[{"source":"leetcode_url","count":n}, ...]` sorted by source name (`leetcode_url`, `manual`).
+
+`GET /api/v1/me/stats/recall` returns `{"forgot","partial","remember","total"}` — counts of review outcomes across the whole history, `total = forgot + partial + remember`.
+
+`GET /api/v1/me/stats/workload?days=N` returns `[{"date":"YYYY-MM-DD","count":n}, ...]` — the number of active (`spaced_repetition`) tasks scheduled per calendar day from today through today + N - 1 (today included). Days without due tasks are included with `count: 0`. `days` defaults to 7 and must be between 1 and 90, otherwise `422 VALIDATION_ERROR`. Disabled tasks are excluded.
+
+Statistics error responses follow the shared error model (e.g. unauthenticated requests get `401 UNAUTHORIZED`).
+
 ## Phase 2
 
 Planned extensions include difficulty/state/topic dictionaries, a shared task catalog, statistics endpoints, pagination, sorting, rate limiting, observability, and a versioned `/api/v2` when breaking changes become necessary.
