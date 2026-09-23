@@ -88,13 +88,15 @@ The system must support short intervals after poor recall, longer intervals afte
 
 The frontend is active as a React + Vite + TypeScript application. The Java/Spring backend and PostgreSQL integration are the next major delivery stages. Local or temporary implementations are acceptable during this transition but must remain compatible with the target architecture.
 
+Owner decision (2026-09): the project is a pet/open-source product. It is not deployed to the cloud and not monetized. The final form is a repository anyone can clone and run locally via Docker, positioned as local-first — user data lives only on their own machine. At the same time the architecture stays container-ready: the owner can deploy it on a real server at any time by changing only the environment configuration (including real SMTP for email). The step-by-step plan for this goal is maintained in [ROADMAP.md](ROADMAP.md) and takes precedence over the general roadmap below.
+
 ## 10. Roadmap
 
 1. Stabilize task and review flows.
 2. Implement the Java/Spring API.
 3. Connect PostgreSQL and migrate persistence to the server.
-4. Complete authentication and cross-device synchronization.
-5. Expand analytics and notifications.
+4. Complete authentication and local backup/export (cross-device synchronization is out of scope for the local-first goal).
+5. Expand analytics and local reminders.
 6. Develop the mobile client.
 
 ## 11. Documentation priority
