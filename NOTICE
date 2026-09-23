@@ -1,3 +1,9 @@
-Copyright (c) 2026 Loginov Gleb
+LeetCode Tracker
 
-This project was independently developed and documented by Loginov Gleb. Attribution is required under the Creative Commons Attribution-NonCommercial 4.0 International license.
+Copyright (c) 2026 Loginov Gleb (gleb7499)
+
+This project was independently developed and documented by Loginov Gleb.
+
+Licensed under the MIT License — see the LICENSE file for the full text.
+Third-party dependencies are used under their respective licenses; see the
+dependency manifests (backend/build.gradle.kts, frontend/package.json).
