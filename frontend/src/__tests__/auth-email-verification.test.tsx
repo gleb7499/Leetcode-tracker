@@ -100,7 +100,11 @@ async function runAuthAction<T>(run: () => Promise<T>): Promise<T> {
   return action
 }
 
-describe("auth verification flow against the API", () => {
+// Live test against a real backend; runs only when the QA env vars are set
+// (locally via .env). In CI they are absent — skip, not fail.
+const hasLiveTestEnv = Boolean(TEST_EMAIL && TEST_PASSWORD && TEST_CODE)
+
+describe.skipIf(!hasLiveTestEnv)("auth verification flow against the API", () => {
   beforeEach(() => {
     assertTestEnvReady()
     vi.resetAllMocks()

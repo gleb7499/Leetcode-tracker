@@ -46,14 +46,19 @@ npm run test
 
 ## Interface references
 
-The root of the repository contains captured UI states:
+Captured UI states (stage 8, final, against the docker-compose stack):
 
-- sign-in: [audit-login.png](docs/screenshots/audit-login.png);
-- home: [audit-home.png](docs/screenshots/audit-home.png);
-- library panel: [audit-library-panel.png](docs/screenshots/audit-library-panel.png);
-- expanded library: [audit-library-expanded.png](docs/screenshots/audit-library-expanded.png);
-- review session: [audit-review-session.png](docs/screenshots/audit-review-session.png);
-- profile panel: [audit-profile-panel.png](docs/screenshots/audit-profile-panel.png).
+- sign-in: [final-01-login.png](docs/screenshots/final-01-login.png);
+- home: [final-02-home.png](docs/screenshots/final-02-home.png);
+- add task: [final-03-add-task.png](docs/screenshots/final-03-add-task.png);
+- review session: [final-04-review.png](docs/screenshots/final-04-review.png);
+- progress panel: [final-05-stats.png](docs/screenshots/final-05-stats.png);
+- library panel: [final-06-library.png](docs/screenshots/final-06-library.png);
+- settings panel: [final-07-settings.png](docs/screenshots/final-07-settings.png);
+- profile panel: [final-08-profile.png](docs/screenshots/final-08-profile.png);
+- home empty state: [final-09-home-empty-state.png](docs/screenshots/final-09-home-empty-state.png).
+
+Older captures (stages 5–6) remain in `docs/screenshots/` with their stage prefixes.
 
 ## Current limitations
 

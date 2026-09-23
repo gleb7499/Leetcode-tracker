@@ -97,4 +97,24 @@ describe("useDailyProgress", () => {
     // After the midnight timer fires the state should reset.
     expect(result.current.todayProgress).toBe(0)
   })
+
+  it("re-syncs the target when the queue size changes", async () => {
+    const useDailyProgress = await getHook()
+    const { result, rerender } = renderHook(
+      ({ target }) => useDailyProgress(target),
+      { initialProps: { target: 1 } },
+    )
+
+    expect(result.current.todayTotal).toBe(1)
+
+    // The review queue finished loading with more due tasks.
+    rerender({ target: 6 })
+    expect(result.current.todayTotal).toBe(6)
+
+    // Completed count is preserved when the target grows.
+    act(() => result.current.incrementCompleted())
+    rerender({ target: 8 })
+    expect(result.current.todayProgress).toBe(1)
+    expect(result.current.todayTotal).toBe(8)
+  })
 })

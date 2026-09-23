@@ -195,6 +195,30 @@ class AuthIntegrationTest {
 
     // --- helpers ---
 
+    @Test
+    @DisplayName("Refresh with an unknown (stolen or forged) token is rejected with 401")
+    void refreshWithUnknownToken() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"no-such-token.6b8b07e3\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    @DisplayName("A consumed OTP cannot be re-confirmed; a fresh code is required")
+    void consumedOtpCannotBeReused() throws Exception {
+        String email = "reuse@example.com";
+        register(email, "Reuse User").andExpect(status().isCreated());
+        String otp = latestOtp(email, OtpPurpose.VERIFY_EMAIL);
+        confirmVerification(email, otp).andExpect(status().isOk());
+
+        // Same code again: rejected (consumed).
+        confirmVerification(email, otp)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
+    }
+
     private void registerAndVerify(String email) throws Exception {
         register(email, "Test User").andExpect(status().isCreated());
         confirmVerification(email, latestOtp(email, OtpPurpose.VERIFY_EMAIL))

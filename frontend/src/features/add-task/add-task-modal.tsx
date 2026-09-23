@@ -981,7 +981,7 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                     return
                   }
 
-                  if (topicSuggestions.length === 0) return
+                  if (topicSuggestions.length === 0 && event.key !== "Enter") return
 
                   if (event.key === "ArrowDown") {
                     event.preventDefault()
@@ -1005,6 +1005,15 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
 
                   if (event.key === "Enter") {
                     event.preventDefault()
+                    if (topicSuggestions.length === 0) {
+                      // No catalog match: free-form entry — the backend accepts
+                      // arbitrary topic names, so add the typed query as-is.
+                      const query = state.manualDetails.topicQuery.trim()
+                      if (query) {
+                        handleManualTopicPick(query)
+                      }
+                      return
+                    }
                     const selectedTopic = activeTopicSuggestion ?? topicSuggestions[0]
                     if (selectedTopic) {
                       handleManualTopicPick(selectedTopic)
@@ -1060,7 +1069,9 @@ export function AddTaskModal({ isOpen, onClose, onSaveTask }: AddTaskModalProps)
                     ))
                   ) : (
                     <p className="topic-suggestion-empty" role="status" aria-live="polite">
-                      No topics found
+                      {state.manualDetails.topicQuery.trim()
+                        ? `No suggestions — press Enter to add "${state.manualDetails.topicQuery.trim()}"`
+                        : "No topics found"}
                     </p>
                   )}
                 </div>
