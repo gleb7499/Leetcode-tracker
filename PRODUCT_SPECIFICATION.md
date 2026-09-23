@@ -96,6 +96,8 @@ Stage 2 done (2026-09): full auth API per BACKEND_FRONTEND_CONTRACT.md — regis
 
 Stage 3 done (2026-09): tasks CRUD with user isolation, LeetCode URL parsing, /today review queue, review recording with interval recalculation from review_policies (REMEMBER grows, PARTIAL keeps, FORGOT resets), full review history in user_reviews. Contract extended with tasks endpoints; V3 migration.
 
+Stage 4 done (2026-09): statistics endpoints under /api/v1/me/stats — summary with streak, distributions by difficulty and source, recall quality, upcoming workload; computed from user_reviews/user_tasks/tasks per DATABASE_DIAGRAM.md (no separate aggregate table).
+
 Owner decision (2026-09): the project is a pet/open-source product. It is not deployed to the cloud and not monetized. The final form is a repository anyone can clone and run locally via Docker, positioned as local-first — user data lives only on their own machine. At the same time the architecture stays container-ready: the owner can deploy it on a real server at any time by changing only the environment configuration (including real SMTP for email). The step-by-step plan for this goal is maintained in [ROADMAP.md](ROADMAP.md) and takes precedence over the general roadmap below.
 
 ## 10. Roadmap
