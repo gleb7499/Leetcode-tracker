@@ -37,45 +37,20 @@ export interface ResolvedTaskDraft {
   sourceMeta?: Task['sourceMeta'];
 }
 
-export interface User {
+export interface CurrentUser {
   id: string;
   name: string;
   email: string;
-  passwordHash: string;
-  createdAt: string;
-  lastLogin: string | null;
   emailVerifiedAt: string | null;
-  security: UserSecuritySettings;
 }
 
-export interface UserSecuritySettings {
-  requireEmailCodeOnLogin: boolean;
-}
-
-export type VerificationFlow = 'register' | 'login';
+export type VerificationFlow = 'register';
 
 export interface PendingVerification {
   flow: VerificationFlow;
   email: string;
-  expiresAt: number;
 }
 
-export interface Session {
-  userId: string;
-  email: string;
-  name: string;
-  createdAt: number;
-  expiresAt: number;
-}
-
-export interface CurrentUser {
-  id: string;
-  email: string;
-  name: string;
-  emailVerifiedAt: string | null;
-  security: UserSecuritySettings;
-}
-
-export type AuthStage = 'anonymous' | 'pending-verification' | 'authenticated';
+export type AuthStage = 'loading' | 'anonymous' | 'pending-verification' | 'authenticated';
 
 export type Screen = 'home' | 'add' | 'review' | 'stats' | 'settings';

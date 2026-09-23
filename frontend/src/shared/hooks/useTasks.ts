@@ -1,158 +1,131 @@
-import { useState, useCallback } from 'react';
-import { storage } from '../utils/storage';
-import { generateId, parseStringToArray } from '../utils/helpers';
-import type { Task, ReviewStatus, Difficulty, ScheduleMode, TaskSource } from '../types';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { tasksApi, mapTaskDto, type TaskCreatePayload } from '../api/tasks';
+import type { Task, ReviewStatus, Difficulty, TaskSource } from '../types';
 
-const STORAGE_KEY = 'leetcode-tracker-tasks';
-
-const REVIEW_INTERVALS: Record<ReviewStatus, number> = {
-  forgot: 1,
-  partial: 3,
-  remember: 7,
-};
-
-function initDemoData(): Task[] {
-  return [
-    {
-      id: generateId('task'),
-      name: 'Two Sum',
-      url: 'https://leetcode.com/problems/two-sum/',
-      difficulty: 'Easy',
-      topics: ['Array', 'Hash Table'],
-      notes: 'Classic HashMap problem. One pass O(n).',
-      source: 'leetcode',
-      createdAt: new Date().toISOString(),
-      nextReview: new Date().toISOString(),
-      reviews: [],
-    },
-    {
-      id: generateId('task'),
-      name: 'Add Two Numbers',
-      url: 'https://leetcode.com/problems/add-two-numbers/',
-      difficulty: 'Medium',
-      topics: ['Linked List', 'Math', 'Recursion'],
-      notes: 'Add numbers in reverse order using linked lists.',
-      source: 'leetcode',
-      createdAt: new Date().toISOString(),
-      nextReview: new Date().toISOString(),
-      reviews: [],
-    },
-    {
-      id: generateId('task'),
-      name: 'Median of Two Sorted Arrays',
-      url: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
-      difficulty: 'Hard',
-      topics: ['Array', 'Binary Search', 'Divide and Conquer'],
-      notes: 'Binary search on the smaller array. Challenging problem!',
-      source: 'leetcode',
-      createdAt: new Date().toISOString(),
-      nextReview: new Date().toISOString(),
-      reviews: [],
-    },
-  ];
+export interface AddTaskInput {
+  name: string;
+  url: string;
+  difficulty: Difficulty;
+  topics: string;
+  notes: string;
+  source?: TaskSource;
+  sourceMeta?: Task['sourceMeta'];
+  scheduleMode?: 'today' | 'tomorrow';
+  nextReviewAt?: string;
 }
 
-function calculateNextReview(status: ReviewStatus): string {
-  const days = REVIEW_INTERVALS[status] ?? 1;
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString();
-}
-
-function getScheduledReviewDate(scheduleMode: ScheduleMode): string {
-  const date = new Date();
-  if (scheduleMode === 'tomorrow') {
-    date.setDate(date.getDate() + 1);
-  }
-  return date.toISOString();
+function mergeTask(tasks: Task[], next: Task): Task[] {
+  const index = tasks.findIndex((task) => task.id === next.id);
+  if (index === -1) return [...tasks, next];
+  const copy = [...tasks];
+  copy[index] = next;
+  return copy;
 }
 
 export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    return storage.get<Task[]>(STORAGE_KEY) ?? initDemoData();
-  });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [todayTasks, setTodayTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
-  const saveTasks = useCallback((updated: Task[]) => {
-    storage.set(STORAGE_KEY, updated);
-    setTasks(updated);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
-  const getTasksForToday = useCallback((): Task[] => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return tasks.filter((task) => {
-      const next = new Date(task.nextReview);
-      next.setHours(0, 0, 0, 0);
-      return next <= today;
-    });
-  }, [tasks]);
+  const refresh = useCallback(async () => {
+    try {
+      const [all, today] = await Promise.all([tasksApi.list(), tasksApi.today()]);
+      if (!mountedRef.current) return;
+      setTasks(all.map(mapTaskDto));
+      setTodayTasks(today.map(mapTaskDto));
+      setError(null);
+    } catch {
+      if (!mountedRef.current) return;
+      setError('Could not load tasks. Is the backend running?');
+    } finally {
+      if (mountedRef.current) setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const getTasksForToday = useCallback((): Task[] => todayTasks, [todayTasks]);
 
   const addTask = useCallback(
-    (data: {
-      name: string;
-      url: string;
-      difficulty: Difficulty;
-      topics: string;
-      notes: string;
-      source?: TaskSource;
-      sourceMeta?: Task['sourceMeta'];
-      scheduleMode?: ScheduleMode;
-      nextReviewAt?: string;
-    }) => {
-      const effectiveScheduleMode = data.scheduleMode ?? 'today';
-      const nextReview = data.nextReviewAt
-        ? new Date(data.nextReviewAt).toISOString()
-        : getScheduledReviewDate(effectiveScheduleMode);
-
-      const task: Task = {
-        id: generateId('task'),
+    (data: AddTaskInput): Promise<Task> => {
+      // The backend is the source of truth for scheduling: every added task
+      // is due today. The UI "today"/"tomorrow" choice is kept for UX, but
+      // both map to the default spaced-repetition schedule server-side.
+      const payload: TaskCreatePayload = {
         name: data.name.trim(),
         url: data.url.trim(),
         difficulty: data.difficulty,
-        topics: parseStringToArray(data.topics),
+        topics: data.topics
+          .split(',')
+          .map((topic) => topic.trim())
+          .filter(Boolean),
         notes: data.notes.trim(),
-        source: data.source ?? 'leetcode',
-        sourceMeta: data.sourceMeta,
-        createdAt: new Date().toISOString(),
-        nextReview,
-        reviews: [],
+        scheduleMode: 'spaced_repetition',
       };
-      const updated = [...tasks, task];
-      saveTasks(updated);
-      return task;
+
+      return tasksApi.create(payload).then((dto) => {
+        const task = mapTaskDto(dto);
+        if (!mountedRef.current) return task;
+        setTasks((prev) => mergeTask(prev, task));
+        setTodayTasks((prev) => mergeTask(prev, task));
+        return task;
+      });
     },
-    [tasks, saveTasks],
+    [],
   );
 
-  const deleteTask = useCallback(
-    (taskId: string) => {
-      const updated = tasks.filter((t) => t.id !== taskId);
-      saveTasks(updated);
-    },
-    [tasks, saveTasks],
-  );
+  const deleteTask = useCallback((taskId: string): Promise<void> => {
+    return tasksApi.remove(taskId).then(() => {
+      if (!mountedRef.current) return;
+      setTasks((prev) => prev.filter((task) => task.id !== taskId));
+      setTodayTasks((prev) => prev.filter((task) => task.id !== taskId));
+    });
+  }, []);
 
   const recordReview = useCallback(
-    (taskId: string, status: ReviewStatus) => {
-      const updated = tasks.map((t) => {
-        if (t.id !== taskId) return t;
-        return {
-          ...t,
-          reviews: [...t.reviews, { date: new Date().toISOString(), status }],
-          nextReview: calculateNextReview(status),
-        };
+    (taskId: string, status: ReviewStatus): Promise<Task> => {
+      return tasksApi.review(taskId, status).then((dto) => {
+        const task = mapTaskDto(dto);
+        if (!mountedRef.current) return task;
+        setTasks((prev) => mergeTask(prev, task));
+        // The backend recomputes due dates; re-sync the review queue so a
+        // task rescheduled for a future day leaves today's list.
+        void tasksApi.today().then((today) => {
+          if (mountedRef.current) setTodayTasks(today.map(mapTaskDto));
+        });
+        return task;
       });
-      saveTasks(updated);
     },
-    [tasks, saveTasks],
+    [],
   );
 
   const getTaskById = useCallback(
     (taskId: string): Task | undefined => {
-      return tasks.find((t) => t.id === taskId);
+      return tasks.find((task) => task.id === taskId);
     },
     [tasks],
   );
 
-  return { tasks, getTasksForToday, addTask, deleteTask, recordReview, getTaskById };
+  return {
+    tasks,
+    isLoading,
+    error,
+    refresh,
+    getTasksForToday,
+    addTask,
+    deleteTask,
+    recordReview,
+    getTaskById,
+  };
 }

@@ -15,16 +15,18 @@ The repository contains one active client implementation:
 
 - `frontend`: React + Vite + TypeScript application with component-driven UX, panels, review flows, and tests.
 
-The current UI uses browser storage as an interim persistence layer while the server contract is being implemented.
+The UI talks to the backend API (`/api/v1`, see [BACKEND_FRONTEND_CONTRACT.md](BACKEND_FRONTEND_CONTRACT.md)) through the fetch wrapper in `frontend/src/shared/api/`. Browser storage holds only the JWT token pair (localStorage when "Remember me" is checked, sessionStorage otherwise) and the in-progress email verification pointer; it is no longer a data source.
 
 ## Current application behavior
 
 - `RootLayout` provides the application shell and `AmbientBackground` provides the visual background layer.
 - Home and review modes switch through view state with a smooth transition.
 - Navigation and secondary actions are handled by `ProfileMenu` and `SidePanel`.
-- Adding a task uses `AddTaskFab` and the `AddTaskModal` flow.
-- Logout is confirmed through `ConfirmDialog`.
-- Authentication and task data currently use local browser storage.
+- Adding a task uses `AddTaskFab` and the `AddTaskModal` flow; results are persisted via `POST /api/v1/me/tasks`.
+- Logout is confirmed through `ConfirmDialog` and revokes the refresh token via `POST /api/v1/auth/logout`.
+- Authentication is API-backed: register → OTP screen (code arrives by email; without SMTP it is printed in the backend log) → auto-login with rotating JWT access/refresh tokens. Expired access tokens are refreshed transparently on the first 401.
+- Tasks, review outcomes, and statistics are loaded from `/api/v1/me/tasks`, `POST /api/v1/me/tasks/{id}/reviews`, and `/api/v1/me/stats*` respectively; the backend is the single source of truth for scheduling (`nextReview`).
+- In dev mode (`npm run dev`) Vite proxies `/api` to the backend (default `http://localhost:8080`, override with `VITE_API_PROXY_TARGET`).
 
 ## Quality tooling
 
@@ -54,4 +56,5 @@ The root of the repository contains captured UI states:
 
 ## Current limitations
 
-The frontend still uses local storage instead of the backend API. Production synchronization will require moving authentication, task management, and review operations to the contract defined in `BACKEND_FRONTEND_CONTRACT.md`.
+- The "Solved / save for tomorrow" choice in the add-task flow is kept for UX, but the backend contract gives the backend full control of scheduling (every added task is due today), so both options map to the default spaced-repetition schedule server-side.
+- The stats panel's "Mastered" card shows the total `remember` review outcomes (backend metric), and the weekly bar chart shows the upcoming 7-day review workload instead of past activity, because the statistics API does not expose per-day historical review counts.

@@ -1,7 +1,6 @@
 
 import { useState } from "react"
 import { Bell, Moon, Target, Clock, Volume2 } from "@/src/shared/resources/icons"
-import { useAuth } from "@/src/shared/hooks/useAuth"
 import { cn } from "@/lib/utils"
 
 interface SettingsPanelProps {
@@ -9,7 +8,6 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ className }: SettingsPanelProps) {
-  const { currentUser, updateSecuritySettings } = useAuth()
   const [settings, setSettings] = useState({
     dailyGoal: 10,
     notifications: true,
@@ -17,9 +15,6 @@ export function SettingsPanel({ className }: SettingsPanelProps) {
     darkMode: true,
     reviewTime: "09:00",
   })
-
-  const isEmailCodeOnLoginEnabled =
-    currentUser?.security.requireEmailCodeOnLogin ?? false
 
   const updateSetting = <K extends keyof typeof settings>(key: K, value: typeof settings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }))
@@ -74,18 +69,6 @@ export function SettingsPanel({ className }: SettingsPanelProps) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <ToggleSetting
-          icon={Clock}
-          label="Email Code on Sign In"
-          description="Require a 6-digit code from email on every login"
-          enabled={isEmailCodeOnLoginEnabled}
-          onChange={(value) => {
-            updateSecuritySettings({ requireEmailCodeOnLogin: value })
-          }}
-          iconColor="text-primary"
-          disabled={!currentUser}
-        />
-
         <ToggleSetting
           icon={Bell}
           label="Notifications"

@@ -12,6 +12,11 @@ interface AuthRouteGuardProps {
 export function AuthRouteGuard({ route, children }: AuthRouteGuardProps) {
   const { authStage } = useAuth()
 
+  // Session restore is in flight; avoid flashing login/verify redirects.
+  if (authStage === "loading") {
+    return null
+  }
+
   if (route === "login") {
     if (authStage === "authenticated") {
       return <Navigate to="/" replace />
@@ -45,6 +50,10 @@ export function AuthRouteGuard({ route, children }: AuthRouteGuardProps) {
 
 export function AuthAwareFallbackRoute() {
   const { authStage } = useAuth()
+
+  if (authStage === "loading") {
+    return null
+  }
 
   if (authStage === "authenticated") {
     return <Navigate to="/" replace />
