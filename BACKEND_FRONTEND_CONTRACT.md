@@ -29,8 +29,12 @@ Authentication responses must include `success` and `message`. Successful login,
 | GET | `/api/v1/auth/me` | Resolve the current session |
 | POST | `/api/v1/auth/logout` | Sign out |
 | POST | `/api/v1/auth/forgot-password` | Request password recovery |
+| POST | `/api/v1/auth/verify-email/request` | Request an email verification OTP |
+| POST | `/api/v1/auth/verify-email/confirm` | Confirm the OTP; returns a session |
+| POST | `/api/v1/auth/refresh` | Rotate the refresh token, get a new token pair |
+| POST | `/api/v1/auth/reset-password` | Set a new password with a reset OTP |
 
-The password recovery endpoint must return the same neutral response whether or not the email exists.
+The password recovery endpoint must return the same neutral response whether or not the email exists. The same neutrality applies to `verify-email/request`. Login is rejected until the email is verified. `logout` accepts an optional JSON body `{ "refreshToken": "..." }` to revoke a specific refresh token; without a body it revokes all of the user's sessions.
 
 ## Task model
 

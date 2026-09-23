@@ -32,3 +32,17 @@ server:
 app:
   cors:
     origins: ${APP_CORS_ORIGINS:http://localhost:5173}
+  jwt:
+    # Dev-only default; override APP_JWT_SECRET in any real deployment.
+    secret: ${APP_JWT_SECRET:local-dev-only-jwt-secret-change-me-0123456789abcdef}
+    access-ttl: ${APP_JWT_ACCESS_TTL_SECONDS:900}s
+    refresh-ttl: ${APP_JWT_REFRESH_TTL_DAYS:30}d
+  mail:
+    host: ${APP_MAIL_HOST:}
+    port: ${APP_MAIL_PORT:587}
+    username: ${APP_MAIL_USERNAME:}
+    password: ${APP_MAIL_PASSWORD:}
+    from: ${APP_MAIL_FROM:leetcode-tracker@localhost}
+  otp:
+    ttl: 10m
+    max-attempts: 5

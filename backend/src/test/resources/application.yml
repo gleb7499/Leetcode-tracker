@@ -1,12 +1,6 @@
 spring:
   application:
     name: leetcode-tracker-backend
-  datasource:
-    url: jdbc:postgresql://localhost:5432/leetcode_tracker
-    username: leetcode_tracker
-    password: leetcode_tracker
-    hikari:
-      initialization-fail-timeout: -1
   session:
     jdbc:
       initialize-schema: never
@@ -18,12 +12,24 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
-    # Smoke tests run without a database; integration tests (later stages) use a real DB.
-    enabled: false
+    enabled: true
 
 server:
-  port: 8080
+  port: 0
 
 app:
   cors:
     origins: http://localhost:5173
+  jwt:
+    secret: test-only-jwt-secret-with-enough-entropy-0123456789abcdef
+    access-ttl: 900s
+    refresh-ttl: 30d
+  mail:
+    host: ""
+    port: 587
+    username: ""
+    password: ""
+    from: test@localhost
+  otp:
+    ttl: 10m
+    max-attempts: 5
