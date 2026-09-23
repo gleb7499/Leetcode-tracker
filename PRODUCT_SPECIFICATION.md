@@ -88,6 +88,8 @@ The system must support short intervals after poor recall, longer intervals afte
 
 The frontend is active as a React + Vite + TypeScript application. The Java/Spring backend and PostgreSQL integration are the next major delivery stages. Local or temporary implementations are acceptable during this transition but must remain compatible with the target architecture.
 
+Stage 0 done (2026-09): the Spring Boot backend scaffold exists — environment-driven configuration (`.env`-style variables with local defaults), package structure (`config`/`controller`/`service`/`repository`/`entity`/`dto`), `GET /api/health`, CORS and stateless security stubs. It starts without a reachable database; Flyway is present but disabled until the first migration (stage 1).
+
 Owner decision (2026-09): the project is a pet/open-source product. It is not deployed to the cloud and not monetized. The final form is a repository anyone can clone and run locally via Docker, positioned as local-first — user data lives only on their own machine. At the same time the architecture stays container-ready: the owner can deploy it on a real server at any time by changing only the environment configuration (including real SMTP for email). The step-by-step plan for this goal is maintained in [ROADMAP.md](ROADMAP.md) and takes precedence over the general roadmap below.
 
 ## 10. Roadmap
