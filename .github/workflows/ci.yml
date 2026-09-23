@@ -20,6 +20,11 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # The Windows dev repo does not persist the executable bit; restore it.
+      - name: Make gradlew executable
+        working-directory: backend
+        run: chmod +x gradlew
+
       - name: Build and test
         working-directory: backend
         run: ./gradlew build
