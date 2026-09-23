@@ -119,7 +119,7 @@ export function SidePanel({
       {panel === "profile" && !currentUser && (
         <div className="p-6 text-sm text-muted-foreground">Profile data is not available.</div>
       )}
-      {panel === "stats" && <StatsPanel tasks={tasks} />}
+      {panel === "stats" && <StatsPanel />}
       {panel === "library" && <LibraryPanel tasks={tasks} />}
       {panel === "settings" && <SettingsPanel />}
     </div>

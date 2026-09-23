@@ -80,7 +80,10 @@ export default function App() {
 
   const handleReviewFeedback = useCallback(
     (taskId: string, feedback: ReviewFeedback) => {
-      recordReview(taskId, feedback as ReviewStatus)
+      recordReview(taskId, feedback as ReviewStatus).catch(() => {
+        // The API client already surfaced a session-level failure; the card
+        // simply stays in the queue for the next attempt.
+      })
       incrementCompleted()
     },
     [recordReview, incrementCompleted],
@@ -141,6 +144,9 @@ export default function App() {
         source: draft.source,
         sourceMeta: draft.sourceMeta,
         scheduleMode,
+      }).catch(() => {
+        // Failure is surfaced by the modal state on the next open; the API
+        // error mapper logged the root cause.
       })
     },
     [addTask],

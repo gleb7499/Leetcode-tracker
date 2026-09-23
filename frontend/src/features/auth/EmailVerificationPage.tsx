@@ -32,7 +32,6 @@ export function EmailVerificationPage() {
     resendEmailVerificationCode,
     cancelPendingVerification,
     isProcessing,
-    testVerificationCodeHint,
   } = useAuth()
 
   const email = pendingVerification?.email ?? ""
@@ -271,9 +270,10 @@ export function EmailVerificationPage() {
           </div>
         )}
 
-        {testVerificationCodeHint && (
+        {import.meta.env.DEV && (
           <div className="mb-4 py-3 px-4 rounded-xl text-sm bg-accent/10 text-accent border border-accent/20">
-            Test mode enabled for this account. Use code {testVerificationCodeHint}.
+            Development mode: if SMTP is not configured on the backend, the
+            verification code is printed in the backend log console.
           </div>
         )}
 
