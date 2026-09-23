@@ -28,4 +28,12 @@ public class ApiException extends RuntimeException {
     public static ApiException badRequest(String message) {
         return new ApiException(ErrorCode.BAD_REQUEST, message);
     }
+
+    public static ApiException validation(String message) {
+        return new ApiException(ErrorCode.VALIDATION_ERROR, message);
+    }
+
+    public static ApiException internal(String message) {
+        return new ApiException(ErrorCode.INTERNAL_ERROR, message);
+    }
 }

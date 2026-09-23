@@ -51,18 +51,26 @@ Review statuses are `forgot`, `partial`, and `remember`. The frontend sends only
 | Method | Route | Purpose |
 |---|---|---|
 | GET | `/api/v1/me/tasks/today` | List tasks due today |
+| GET | `/api/v1/me/tasks` | List all tasks in the user's library |
 | GET | `/api/v1/me/tasks/{taskId}` | Load a review task |
 | POST | `/api/v1/me/tasks` | Add a task to the user's library |
+| PUT | `/api/v1/me/tasks/{taskId}` | Update `notes` and `scheduleMode` of the user's task |
 | DELETE | `/api/v1/me/tasks/{taskId}` | Remove a task from the user's library |
 | POST | `/api/v1/me/tasks/{taskId}/reviews` | Record a review outcome |
 
-Adding a task accepts `name`, `url`, `difficulty`, `topics`, and `notes`. Recording a review accepts `status` and returns the updated task with its new schedule and review history.
+Adding a task accepts `name`, `url`, `difficulty`, `topics`, `notes` and an optional `scheduleMode` (`spaced_repetition` by default, `disabled` excludes the task from the review queue). `url` is either a LeetCode problem URL (`https://leetcode.com/problems/<slug>/`, optional `www.` subdomain and trailing path) or any other absolute http(s) link, or absent for a fully manual task; a `leetcode.com` URL that does not point to a problem is rejected with `VALIDATION_ERROR`. The backend derives `source` (`leetcode_url` or `manual`) and `sourceMeta` (the normalized problem URL) from the `url`. Adding a task the user already has is idempotent and returns the existing task. The response task DTO contains `id`, `name`, `url`, `difficulty` (`EASY`/`MEDIUM`/`HARD`), `topics`, `notes`, `source`, `sourceMeta`, `scheduleMode`, `createdAt` (ISO 8601), `nextReview` (`YYYY-MM-DD`) and `reviews: { date, status }[]` (statuses `forgot`, `partial`, `remember`; `date` is `YYYY-MM-DD`).
+
+A newly added task is due on the day it is added (`nextReview` = today). Recording a review accepts `status` (`forgot` | `partial` | `remember`) and returns the updated task with its new schedule and full review history.
+
+Updating a task only touches user-scoped fields (`notes`, `scheduleMode`); the shared problem card is not modified. Deleting a task removes only the user's relationship and is idempotent (repeated deletes return 204; the shared task card is removed only when no user references it).
 
 ## Scheduling semantics
 
-- `remember`: increase the interval before the next review;
+- `remember`: increase the interval before the next review (multiply the current interval by the policy growth factor);
 - `partial`: keep the current interval;
-- `forgot`: shorten the interval.
+- `forgot`: reset to the short base interval.
+
+Intervals come from the `review_policies` reference table (per outcome: `base_interval_days`, `growth_factor`, `max_interval_days`; seeded defaults: forgot 1 day, partial base 1 / max 30, remember base 2 / factor 2.0 / max 90) and are clamped to `[1, max_interval_days]`. The first review after adding a task uses the outcome's `base_interval_days`. Every review is recorded in `user_reviews` with the applied interval and the new next review date.
 
 The algorithm remains hidden from the user interface and is calculated entirely by the backend.
 
