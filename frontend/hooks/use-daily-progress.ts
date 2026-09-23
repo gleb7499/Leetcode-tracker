@@ -84,17 +84,30 @@ const msUntilNextDay = (now: Date = new Date()): number => {
   return Math.max(1, next.getTime() - now.getTime())
 }
 
-export function useDailyProgress(defaultTarget: number = DEFAULT_DAILY_TARGET) {
+export function useDailyProgress(defaultTarget: number = DEFAULT_DAILY_TARGET, storageKey: string = STORAGE_KEY) {
   const [state, setState] = useState<DailyProgressState>(() => {
     const stored = typeof window !== "undefined"
-      ? window.localStorage.getItem(STORAGE_KEY)
+      ? window.localStorage.getItem(storageKey)
       : null
     return parseStoredState(stored, defaultTarget)
   })
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  }, [state])
+    window.localStorage.setItem(storageKey, JSON.stringify(state))
+  }, [state, storageKey])
+
+  // The queue size is the source of truth for the daily target. Adjust state
+  // during render (React-endorsed pattern) whenever the queue size or the
+  // stored target diverge (e.g. first load, queue re-sync after a review,
+  // stale value from another user or an older day), preserving today's
+  // completed count.
+  const nextTarget = Math.max(1, Math.floor(defaultTarget))
+  if (state.target !== nextTarget) {
+    setState((prev) => {
+      const normalized = normalizeForToday(prev, defaultTarget)
+      return clampState({ ...normalized, target: nextTarget })
+    })
+  }
 
   useEffect(() => {
     let timerId: ReturnType<typeof setTimeout>

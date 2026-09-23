@@ -1,8 +1,10 @@
 package leetcode.tracker.backend.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import leetcode.tracker.backend.entity.TaskTopicEntity;
@@ -10,6 +12,9 @@ import leetcode.tracker.backend.entity.TaskTopicEntity;
 public interface TaskTopicRepository extends JpaRepository<TaskTopicEntity, Long> {
 
     List<TaskTopicEntity> findByTaskId(Long taskId);
+
+    @EntityGraph(attributePaths = {"topic"})
+    List<TaskTopicEntity> findByTaskIdIn(Collection<Long> taskIds);
 
     Optional<TaskTopicEntity> findByTaskIdAndTopicId(Long taskId, Long topicId);
 

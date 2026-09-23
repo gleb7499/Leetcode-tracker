@@ -25,7 +25,7 @@ const TRANSITION_DURATION_MS = 400
 export default function App() {
   const navigate = useNavigate()
   const { currentUser, logout } = useAuth()
-  const { tasks, getTasksForToday, recordReview, addTask } = useTasks()
+  const { tasks, getTasksForToday, recordReview, addTask, error: tasksError } = useTasks()
 
   const [view, setView] = useState<ViewState>("home")
   const [activePanel, setActivePanel] = useState<PanelType>(null)
@@ -54,7 +54,10 @@ export default function App() {
     todayTotal,
     todayRemaining,
     incrementCompleted,
-  } = useDailyProgress(todayTasks.length)
+  } = useDailyProgress(
+    todayTasks.length,
+    currentUser ? `leetcode-tracker.daily-progress.v1.${currentUser.id}` : "leetcode-tracker.daily-progress.v1",
+  )
 
   const scheduleTransition = useCallback((nextView: Exclude<ViewState, "transitioning-to-review">) => {
     if (transitionTimerRef.current) {
@@ -229,6 +232,8 @@ export default function App() {
             <HomeView
               todayProgress={todayProgress}
               todayTotal={todayTotal}
+              hasDueTasks={todayTasks.length > 0}
+              loadError={tasksError}
               onStartSession={handleStartSession}
               isExiting={isTransitioningToReview}
               isStartDisabled={todayTasks.length === 0 || isTransitioningToReview}

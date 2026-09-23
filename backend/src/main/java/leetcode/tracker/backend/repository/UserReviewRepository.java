@@ -1,7 +1,9 @@
 package leetcode.tracker.backend.repository;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -10,6 +12,9 @@ import leetcode.tracker.backend.entity.UserReviewEntity;
 public interface UserReviewRepository extends JpaRepository<UserReviewEntity, Long> {
 
     List<UserReviewEntity> findByUserTaskIdOrderByReviewedAtAsc(Long userTaskId);
+
+    @EntityGraph(attributePaths = {"state"})
+    List<UserReviewEntity> findByUserTaskIdInOrderByReviewedAtAsc(Collection<Long> userTaskIds);
 
     @Query(value = """
             SELECT COUNT(*)

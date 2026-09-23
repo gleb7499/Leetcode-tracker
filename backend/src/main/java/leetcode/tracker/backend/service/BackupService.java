@@ -2,9 +2,11 @@ package leetcode.tracker.backend.service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import leetcode.tracker.backend.dto.BackupData;
@@ -94,21 +96,30 @@ public class BackupService {
                         s.getReviewTime()))
                 .orElse(null);
 
-        List<BackupData.TaskBackup> tasks = new ArrayList<>();
-        for (UserTaskEntity userTask : userTaskRepository.findByUserIdOrderByNextReviewDateAsc(userId)) {
-            TaskEntity task = userTask.getTask();
-            List<String> topics = taskTopicRepository.findByTaskId(task.getId()).stream()
-                    .map(tt -> tt.getTopic().getName())
-                    .toList();
-            List<BackupData.TaskBackup.ReviewBackup> reviews = userReviewRepository
-                    .findByUserTaskIdOrderByReviewedAtAsc(userTask.getId()).stream()
-                    .map(r -> new BackupData.TaskBackup.ReviewBackup(
+        List<UserTaskEntity> userTasks = userTaskRepository.findByUserIdOrderByNextReviewDateAsc(userId);
+        // Batch-load topics and reviews: two queries for the whole export, not per task.
+        List<Long> taskIds = userTasks.stream().map(ut -> ut.getTask().getId()).distinct().toList();
+        List<Long> userTaskIds = userTasks.stream().map(UserTaskEntity::getId).toList();
+        Map<Long, List<String>> topicsByTaskId = new HashMap<>();
+        for (TaskTopicEntity tt : taskTopicRepository.findByTaskIdIn(taskIds)) {
+            topicsByTaskId.computeIfAbsent(tt.getTaskId(), k -> new ArrayList<>()).add(tt.getTopic().getName());
+        }
+        Map<Long, List<BackupData.TaskBackup.ReviewBackup>> reviewsByUserTaskId = new HashMap<>();
+        for (UserReviewEntity r : userReviewRepository.findByUserTaskIdInOrderByReviewedAtAsc(userTaskIds)) {
+            reviewsByUserTaskId.computeIfAbsent(r.getUserTaskId(), k -> new ArrayList<>())
+                    .add(new BackupData.TaskBackup.ReviewBackup(
                             r.getState().getCode(),
                             r.getReviewedAt(),
                             r.getIntervalDays(),
                             r.getNextReviewDate(),
-                            r.getReviewText()))
-                    .toList();
+                            r.getReviewText()));
+        }
+        List<BackupData.TaskBackup> tasks = new ArrayList<>();
+        for (UserTaskEntity userTask : userTasks) {
+            TaskEntity task = userTask.getTask();
+            List<String> topics = topicsByTaskId.getOrDefault(task.getId(), List.of());
+            List<BackupData.TaskBackup.ReviewBackup> reviews =
+                    reviewsByUserTaskId.getOrDefault(userTask.getId(), List.of());
             tasks.add(new BackupData.TaskBackup(
                     task.getIdentityKey(),
                     task.getTitle(),

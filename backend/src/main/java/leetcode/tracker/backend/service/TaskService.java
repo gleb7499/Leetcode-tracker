@@ -4,9 +4,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -118,19 +121,14 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<TaskResponse> listTasks(Long userId) {
-        return userTaskRepository.findByUserIdOrderByNextReviewDateAsc(userId).stream()
-                .map(this::toResponse)
-                .toList();
+        return toResponses(userTaskRepository.findByUserIdOrderByNextReviewDateAsc(userId));
     }
 
     @Transactional(readOnly = true)
     public List<TaskResponse> todayQueue(Long userId) {
-        return userTaskRepository
+        return toResponses(userTaskRepository
                 .findByUserIdAndScheduleModeAndNextReviewDateLessThanEqualOrderByNextReviewDateAsc(
-                        userId, UserTaskEntity.MODE_SPACED_REPETITION, LocalDate.now())
-                .stream()
-                .map(this::toResponse)
-                .toList();
+                        userId, UserTaskEntity.MODE_SPACED_REPETITION, LocalDate.now()));
     }
 
     @Transactional(readOnly = true)
@@ -283,10 +281,46 @@ public class TaskService {
                 .toList();
         List<TaskResponse.ReviewEntry> reviews = userReviewRepository
                 .findByUserTaskIdOrderByReviewedAtAsc(userTask.getId()).stream()
-                .map(r -> new TaskResponse.ReviewEntry(
-                        r.getReviewedAt().atZone(ZoneOffset.UTC).toLocalDate(),
-                        r.getState().getCode().toLowerCase(Locale.ROOT)))
+                .map(this::toReviewEntry)
                 .toList();
+        return toResponse(userTask, topics, reviews);
+    }
+
+    /**
+     * Batch variant for list endpoints: topics and reviews are loaded with two
+     * queries for the whole page instead of two per row (N+1).
+     */
+    private List<TaskResponse> toResponses(List<UserTaskEntity> userTasks) {
+        if (userTasks.isEmpty()) {
+            return List.of();
+        }
+        List<Long> taskIds = userTasks.stream().map(ut -> ut.getTask().getId()).distinct().toList();
+        List<Long> userTaskIds = userTasks.stream().map(UserTaskEntity::getId).toList();
+        Map<Long, List<String>> topicsByTaskId = new HashMap<>();
+        for (TaskTopicEntity tt : taskTopicRepository.findByTaskIdIn(taskIds)) {
+            topicsByTaskId.computeIfAbsent(tt.getTaskId(), k -> new ArrayList<>()).add(tt.getTopic().getName());
+        }
+        Map<Long, List<TaskResponse.ReviewEntry>> reviewsByUserTaskId = new HashMap<>();
+        for (UserReviewEntity r : userReviewRepository.findByUserTaskIdInOrderByReviewedAtAsc(userTaskIds)) {
+            reviewsByUserTaskId.computeIfAbsent(r.getUserTaskId(), k -> new ArrayList<>())
+                    .add(toReviewEntry(r));
+        }
+        return userTasks.stream()
+                .map(ut -> toResponse(ut,
+                        topicsByTaskId.getOrDefault(ut.getTask().getId(), List.of()),
+                        reviewsByUserTaskId.getOrDefault(ut.getId(), List.of())))
+                .toList();
+    }
+
+    private TaskResponse.ReviewEntry toReviewEntry(UserReviewEntity r) {
+        return new TaskResponse.ReviewEntry(
+                r.getReviewedAt().atZone(ZoneOffset.UTC).toLocalDate(),
+                r.getState().getCode().toLowerCase(Locale.ROOT));
+    }
+
+    private TaskResponse toResponse(UserTaskEntity userTask, List<String> topics,
+            List<TaskResponse.ReviewEntry> reviews) {
+        TaskEntity task = userTask.getTask();
         return new TaskResponse(
                 userTask.getId(),
                 task.getTitle(),

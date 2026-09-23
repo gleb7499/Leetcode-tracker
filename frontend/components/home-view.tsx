@@ -5,13 +5,18 @@ import { cn } from "@/lib/utils"
 interface HomeViewProps {
   todayProgress: number
   todayTotal: number
+  hasDueTasks: boolean
+  loadError?: string | null
   onStartSession: () => void
   isExiting: boolean
   isStartDisabled?: boolean
   layout?: "full" | "split"
 }
 
-function getMessage(progress: number, percentage: number) {
+function getMessage(progress: number, percentage: number, hasDueTasks: boolean) {
+  if (!hasDueTasks) {
+    return { title: "All caught up!", subtitle: "Nothing due right now — add a task to stay sharp" }
+  }
   if (progress === 0) {
     return { title: "Ready to practice?", subtitle: "Your brain is primed for learning" }
   }
@@ -27,6 +32,8 @@ function getMessage(progress: number, percentage: number) {
 export function HomeView({
   todayProgress,
   todayTotal,
+  hasDueTasks,
+  loadError = null,
   onStartSession,
   isExiting,
   isStartDisabled = false,
@@ -34,7 +41,9 @@ export function HomeView({
 }: HomeViewProps) {
   const isSplitLayout = layout === "split"
   const percentage = todayTotal > 0 ? (todayProgress / todayTotal) * 100 : 0
-  const { title, subtitle } = getMessage(todayProgress, percentage)
+  const { title, subtitle } = loadError
+    ? { title: "Couldn't load your tasks", subtitle: loadError }
+    : getMessage(todayProgress, percentage, hasDueTasks)
 
   return (
     <div
@@ -63,9 +72,13 @@ export function HomeView({
         </div>
 
         <p className="text-muted-foreground/60 text-sm text-center animate-delay-400">
-          {todayProgress === 0
-            ? "Your algorithms are waiting. Just press start."
-            : `${todayTotal - todayProgress} cards left. You're doing great.`}
+          {loadError
+            ? "Check that the backend is running, then refresh the page."
+            : !hasDueTasks
+              ? "Tap the + button to add your first problem."
+              : todayProgress === 0
+                ? "Your algorithms are waiting. Just press start."
+                : `${todayTotal - todayProgress} cards left. You're doing great.`}
         </p>
       </div>
     </div>
