@@ -92,6 +92,8 @@ Stage 0 done (2026-09): the Spring Boot backend scaffold exists — environment-
 
 Stage 1 done (2026-09): PostgreSQL schema via Flyway (`V1__init_schema.sql`, 9 tables per DATABASE_DIAGRAM.md with integrity constraints and seed data), Flyway enabled by default, docker-compose stack (postgres + backend multi-stage build + frontend behind nginx with `/api` proxy, optional maildev profile). Clean `docker compose up --build` brings up the whole stack.
 
+Stage 2 done (2026-09): full auth API per BACKEND_FRONTEND_CONTRACT.md — register/login/me/logout, email-verification OTP (SMTP with log fallback), password reset, JWT access tokens + rotating hashed refresh tokens, unified error model, BCrypt. Contract extended with verify/refresh/reset endpoints.
+
 Owner decision (2026-09): the project is a pet/open-source product. It is not deployed to the cloud and not monetized. The final form is a repository anyone can clone and run locally via Docker, positioned as local-first — user data lives only on their own machine. At the same time the architecture stays container-ready: the owner can deploy it on a real server at any time by changing only the environment configuration (including real SMTP for email). The step-by-step plan for this goal is maintained in [ROADMAP.md](ROADMAP.md) and takes precedence over the general roadmap below.
 
 ## 10. Roadmap
