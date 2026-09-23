@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: leetcode-tracker-backend
+  datasource:
+    url: ${APP_DB_URL:jdbc:postgresql://localhost:5432/leetcode_tracker}
+    username: ${APP_DB_USERNAME:leetcode_tracker}
+    password: ${APP_DB_PASSWORD:leetcode_tracker}
+    hikari:
+      # Application must start even when PostgreSQL is not running locally.
+      # Pool creation does not fail fast; the first real DB call will error instead.
+      initialization-fail-timeout: -1
+  session:
+    jdbc:
+      # Session schema is owned by Flyway (enabled in later stages), never by Hibernate/Spring.
+      initialize-schema: never
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        # Fixed explicitly so the EntityManagerFactory can boot without a live DB connection.
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    # Temporarily disabled by default until the first migration is added (stage 1+).
+    # Schema is owned by Flyway; never use ddl-auto other than "validate".
+    enabled: ${APP_FLYWAY_ENABLED:false}
+
+server:
+  port: ${APP_SERVER_PORT:8080}
+
+app:
+  cors:
+    origins: ${APP_CORS_ORIGINS:http://localhost:5173}
