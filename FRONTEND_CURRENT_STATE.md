@@ -26,6 +26,7 @@ The UI talks to the backend API (`/api/v1`, see [BACKEND_FRONTEND_CONTRACT.md](B
 - Logout is confirmed through `ConfirmDialog` and revokes the refresh token via `POST /api/v1/auth/logout`.
 - Authentication is API-backed: register → OTP screen (code arrives by email; without SMTP it is printed in the backend log) → auto-login with rotating JWT access/refresh tokens. Expired access tokens are refreshed transparently on the first 401.
 - Tasks, review outcomes, and statistics are loaded from `/api/v1/me/tasks`, `POST /api/v1/me/tasks/{id}/reviews`, and `/api/v1/me/stats*` respectively; the backend is the single source of truth for scheduling (`nextReview`).
+- The settings panel is fully API-backed (`src/shared/api/settings.ts`): repetition-policy presets (`GET /api/v1/review-policies` + `PATCH /api/v1/me/settings`), persisted UI options (daily goal, reminder time, notifications, sound effects), backup export (`GET /api/v1/me/backup` — file download) and import (`POST /api/v1/me/backup` — file picker with `ConfirmDialog`), password change (`POST /api/v1/me/change-password`), and account deletion (`DELETE /api/v1/me` with password confirmation + `ConfirmDialog`, clears the local session afterwards).
 - In dev mode (`npm run dev`) Vite proxies `/api` to the backend (default `http://localhost:8080`, override with `VITE_API_PROXY_TARGET`).
 
 ## Quality tooling

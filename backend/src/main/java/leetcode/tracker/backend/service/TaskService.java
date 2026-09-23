@@ -47,6 +47,7 @@ public class TaskService {
     private final DifficultyRepository difficultyRepository;
     private final StateRepository stateRepository;
     private final ReviewPolicyRepository reviewPolicyRepository;
+    private final SettingsService settingsService;
     private final LeetCodeUrlParser urlParser;
 
     public TaskService(TaskRepository taskRepository,
@@ -57,6 +58,7 @@ public class TaskService {
             DifficultyRepository difficultyRepository,
             StateRepository stateRepository,
             ReviewPolicyRepository reviewPolicyRepository,
+            SettingsService settingsService,
             LeetCodeUrlParser urlParser) {
         this.taskRepository = taskRepository;
         this.userTaskRepository = userTaskRepository;
@@ -66,6 +68,7 @@ public class TaskService {
         this.difficultyRepository = difficultyRepository;
         this.stateRepository = stateRepository;
         this.reviewPolicyRepository = reviewPolicyRepository;
+        this.settingsService = settingsService;
         this.urlParser = urlParser;
     }
 
@@ -171,8 +174,7 @@ public class TaskService {
         }
         StateEntity state = stateRepository.findByCode(code)
                 .orElseThrow(() -> ApiException.internal("Review states are not seeded"));
-        ReviewPolicyEntity policy = reviewPolicyRepository.findByStateIdAndActiveTrue(state.getId())
-                .orElseThrow(() -> ApiException.internal("No active review policy for state " + code));
+        PolicyValues policy = resolvePolicy(userId, code, state);
 
         LocalDate today = LocalDate.now();
         long currentInterval = userTask.getLastReviewDate() != null && userTask.getNextReviewDate() != null
@@ -193,20 +195,39 @@ public class TaskService {
     }
 
     /**
+     * Interval values applied to a review: the user's chosen preset when set,
+     * otherwise the global review_policies row for the outcome.
+     */
+    private PolicyValues resolvePolicy(Long userId, String code, StateEntity state) {
+        SettingsService.PresetValues preset = settingsService.presetValuesForUser(userId);
+        if (preset != null) {
+            SettingsService.PolicyValue value = preset.forState(code);
+            return new PolicyValues(value.baseIntervalDays(), value.growthFactor(), value.maxIntervalDays());
+        }
+        ReviewPolicyEntity policy = reviewPolicyRepository.findByStateIdAndActiveTrue(state.getId())
+                .orElseThrow(() -> ApiException.internal("No active review policy for state " + code));
+        return new PolicyValues(policy.getBaseIntervalDays(), policy.getGrowthFactor(),
+                policy.getMaxIntervalDays());
+    }
+
+    private record PolicyValues(int baseIntervalDays, double growthFactor, int maxIntervalDays) {
+    }
+
+    /**
      * Interval policy per contract scheduling semantics: remember grows the interval,
      * partial keeps it, forgot resets to the short base interval. Values come from the
-     * review_policies reference table; always clamped to [1, max_interval_days].
+     * active policy (user preset or global); always clamped to [1, max_interval_days].
      */
-    private int nextInterval(String code, ReviewPolicyEntity policy, long currentInterval) {
+    private int nextInterval(String code, PolicyValues policy, long currentInterval) {
         if (currentInterval <= 0) {
-            return policy.getBaseIntervalDays();
+            return policy.baseIntervalDays();
         }
         long next = switch (code) {
-            case "REMEMBER" -> Math.round(currentInterval * policy.getGrowthFactor());
+            case "REMEMBER" -> Math.round(currentInterval * policy.growthFactor());
             case "PARTIAL" -> currentInterval;
-            default -> policy.getBaseIntervalDays();
+            default -> policy.baseIntervalDays();
         };
-        next = Math.max(1, Math.min(next, policy.getMaxIntervalDays()));
+        next = Math.max(1, Math.min(next, policy.maxIntervalDays()));
         return (int) next;
     }
 

@@ -151,6 +151,32 @@ public class AuthService {
                 .orElseThrow(() -> ApiException.unauthorized("Missing or invalid session"));
     }
 
+    @Transactional
+    public MessageResponse changePassword(Long userId, String currentPassword, String newPassword) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.unauthorized("Missing or invalid session"));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw ApiException.unauthorized("Current password is incorrect");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.touch();
+        userRepository.save(user);
+        revokeAll(user.getId());
+        return MessageResponse.of("Password has been changed. Please sign in again.");
+    }
+
+    /** Deletes the account and every related row (tasks, reviews, settings, tokens) via DB cascades. */
+    @Transactional
+    public MessageResponse deleteAccount(Long userId, String password) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.unauthorized("Missing or invalid session"));
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw ApiException.unauthorized("Password is incorrect");
+        }
+        userRepository.delete(user);
+        return MessageResponse.of("Account has been deleted");
+    }
+
     private AuthResponse issueTokens(UserEntity user, String message) {
         RefreshTokenEntity refreshToken = new RefreshTokenEntity();
         String rawRefresh = tokenService.createRefreshToken();

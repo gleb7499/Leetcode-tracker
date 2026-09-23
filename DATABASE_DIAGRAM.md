@@ -120,6 +120,12 @@ erDiagram
 
 - `USER_REVIEWS`: the complete review history used for analytics and learning trends.
 
+## Stage 6 additions (V4 migration)
+
+- `REVIEW_POLICY_PRESETS`: named interval-policy presets (code, name, description, built_in).
+- `REVIEW_POLICY_PRESET_VALUES`: per-outcome interval values of a preset (preset_id, state_id, base/growth/max); PK (preset_id, state_id).
+- `USER_SETTINGS`: one row per user (user_id PK → users ON DELETE CASCADE), optional link to a preset plus UI options (notifications, sound effects, daily_goal, review_time). A user without a row — or with NULL `review_policy_preset_id` — follows the global `REVIEW_POLICIES` values.
+
 ## Task lifecycle
 
 When a user adds a problem, the backend calculates `identity_key`, reuses an existing `TASKS` record where possible, and creates the user's `USER_TASKS` relationship. When a user removes a problem, only that relationship is removed; the shared task remains while other users reference it.
