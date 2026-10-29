@@ -16,6 +16,8 @@ import "@fontsource/jetbrains-mono/latin-500.css"
 import "@fontsource/jetbrains-mono/cyrillic-400.css"
 import "@fontsource/jetbrains-mono/cyrillic-500.css"
 import "./index.css"
+import { IS_DEMO } from "./demo/demo-config"
+import { prepareDemoSession } from "./demo/demo-session"
 import App from "./App"
 import { LoginPage } from "./features/auth/LoginPage"
 import { EmailVerificationPage } from "./features/auth/EmailVerificationPage"
@@ -30,9 +32,13 @@ if (!rootElement) {
   throw new Error("Root element not found")
 }
 
+if (IS_DEMO) {
+  prepareDemoSession()
+}
+
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route element={<RootLayout />}>
           <Route

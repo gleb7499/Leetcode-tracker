@@ -62,16 +62,18 @@ export function StatsPanel({ className }: StatsPanelProps) {
         ) : (
           <div className="flex items-end justify-between gap-2 h-24">
             {stats.week.map((day) => (
-              <div key={day.label + day.count} className="flex-1 flex flex-col items-center gap-2">
-                <div
-                  className={cn(
-                    "w-full rounded-lg bar-fill transition-all duration-500",
-                    day.count > 0 ? "bg-gradient-to-t from-primary/60 to-primary" : "bg-secondary",
-                  )}
-                  style={{
-                    "--bar-height": `${Math.max((day.count / maxWeek) * 100, 10)}%`,
-                  } as React.CSSProperties}
-                />
+              <div key={day.label + day.count} className="flex-1 h-full flex flex-col items-center gap-2">
+                <div className="flex-1 min-h-0 w-full flex items-end">
+                  <div
+                    className={cn(
+                      "w-full rounded-lg bar-fill transition-all duration-500",
+                      day.count > 0 ? "bg-gradient-to-t from-primary/60 to-primary" : "bg-secondary",
+                    )}
+                    style={{
+                      "--bar-height": `${Math.max((day.count / maxWeek) * 100, 10)}%`,
+                    } as React.CSSProperties}
+                  />
+                </div>
                 <span className="text-xs text-muted-foreground">{day.label}</span>
               </div>
             ))}

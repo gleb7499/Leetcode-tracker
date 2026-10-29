@@ -5,6 +5,8 @@ import {
   LEETCODE_PROBLEM_PATH_REGEX,
   isLeetCodeHost,
 } from "@/src/shared/tasks/leetcode-url"
+import { IS_DEMO } from "@/src/demo/demo-config"
+import type { DemoProblem } from "@/src/demo/catalog"
 
 interface ResolveTaskInput {
   source: TaskSource
@@ -93,6 +95,7 @@ function titleFromSlug(slug: string): string {
 function createDraftFromSlug(
   slug: string,
   mode: LeetCodeResolveMode,
+  demoProblem: DemoProblem | null = null,
 ): {
   fullUrl: string
   draft: ResolvedTaskDraft
@@ -100,21 +103,22 @@ function createDraftFromSlug(
 } {
   const fullUrl = `https://leetcode.com/problems/${slug}/`
   const catalogTask = MOCK_REVIEW_TASKS.find((task) => task.url === fullUrl)
+  const known = catalogTask ?? demoProblem
 
   return {
     fullUrl,
-    catalogHit: Boolean(catalogTask),
+    catalogHit: Boolean(known),
     draft: {
       source: "leetcode",
-      name: catalogTask?.name ?? titleFromSlug(slug),
+      name: known?.name ?? titleFromSlug(slug),
       url: fullUrl,
-      difficulty: catalogTask?.difficulty ?? LEETCODE_FALLBACK_DIFFICULTY,
-      topics: catalogTask?.topics ?? [],
-      notes: catalogTask?.notes ?? "",
+      difficulty: known?.difficulty ?? LEETCODE_FALLBACK_DIFFICULTY,
+      topics: known?.topics ?? [],
+      notes: known?.notes ?? "",
       sourceMeta: {
         slug,
         sourceTaskId: catalogTask?.id,
-        catalogHit: Boolean(catalogTask),
+        catalogHit: Boolean(known),
         resolveMode: mode,
       },
     },
@@ -137,7 +141,9 @@ const leetCodeResolver: TaskSourceResolver = {
     }
 
     const resolveMode = getLeetCodeResolveMode()
-    const { draft, catalogHit } = createDraftFromSlug(slug, resolveMode)
+    // The static demo has no lookup service: well-known problems resolve from a built-in catalog.
+    const demoProblem = IS_DEMO ? (await import("@/src/demo/catalog")).findDemoProblem(slug) : null
+    const { draft, catalogHit } = createDraftFromSlug(slug, resolveMode, demoProblem)
 
     if (resolveMode === "failure" || (resolveMode === "auto" && !catalogHit)) {
       return {

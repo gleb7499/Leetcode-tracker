@@ -34,6 +34,17 @@ export class ApiError extends Error {
 
 export const BASE_URL = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "")
 
+const IS_DEMO = import.meta.env.VITE_DEMO === "true"
+
+/** Network call; the static demo build answers from the in-browser mock server instead. */
+async function request(url: string, init: RequestInit): Promise<Response> {
+  if (IS_DEMO) {
+    const { demoFetch } = await import("@/src/demo/mock-server")
+    return demoFetch(url, init)
+  }
+  return fetch(url, init)
+}
+
 let onSessionExpired: (() => void) | null = null
 
 /** Called by the auth layer when refresh fails; clears local session state. */
@@ -70,7 +81,7 @@ async function performRefresh(): Promise<boolean> {
   if (!refreshToken) return false
   const generationAtStart = tokenStorage.getTokenGeneration()
 
-  const response = await fetch(`${BASE_URL}/v1/auth/refresh`, {
+  const response = await request(`${BASE_URL}/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refreshToken }),
@@ -128,7 +139,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}, r
 
   let response: Response
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
+    response = await request(`${BASE_URL}${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,

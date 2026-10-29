@@ -3,6 +3,7 @@ import { Eye, EyeOff, Mail, Lock } from "@/src/shared/resources/icons"
 import { LoginSchema, type LoginFormData } from "@/src/shared/validation/schemas"
 import { FieldErrorMessage } from "@/src/shared/components/field-error-message"
 import { cn } from "@/lib/utils"
+import { DEMO_EMAIL, DEMO_PASSWORD, IS_DEMO } from "@/src/demo/demo-config"
 import { AuthSubmitButton } from "./AuthSubmitButton"
 
 interface LoginFormProps {
@@ -15,8 +16,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLogin, isProcessing }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState(IS_DEMO ? DEMO_EMAIL : "")
+  const [password, setPassword] = useState(IS_DEMO ? DEMO_PASSWORD : "")
   const [remember, setRemember] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({})

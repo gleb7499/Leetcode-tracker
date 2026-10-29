@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react"
 import path from "path"
 
 export default defineConfig({
+  // GitHub Pages serves the demo from /<repo>/; the default keeps root-relative URLs.
+  base: process.env.VITE_BASE ?? "/",
   plugins: [react()],
   resolve: {
     alias: {
