@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { LoginForm } from "./LoginForm"
 import { RegisterForm } from "./RegisterForm"
 import { useAuth } from "@/src/shared/hooks/useAuth"
+import { DemoNotice } from "@/src/demo/demo-notice"
 import { cn } from "@/lib/utils"
 
 type Tab = "login" | "register"
@@ -92,6 +93,10 @@ export function LoginPage() {
             Spaced repetition for algorithms
           </p>
         </div>
+
+        <DemoNotice title="Demo mode">
+          Enter any valid values to sign in or register. You will then be asked for a one-time code.
+        </DemoNotice>
 
         {/* Animated tab switcher */}
         <div className={cn("relative mb-6 glass-subtle p-1", AUTH_TAB_RADIUS_CLASS)} role="tablist" aria-label="Auth mode">

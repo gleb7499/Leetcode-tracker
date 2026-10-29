@@ -11,6 +11,7 @@ import {
 } from '../api/session-store';
 import { tokenStorage } from '../api/tokens';
 import { ApiError } from '../api/client';
+import { IS_DEMO } from '../../demo/demo-config';
 import type { AuthStage, CurrentUser, PendingVerification } from '../types';
 
 type AuthRoute = '/login' | '/verify-email' | '/';
@@ -37,6 +38,12 @@ export function useAuth() {
 
   const login = useCallback(
     async (email: string, password: string, remember: boolean): Promise<AuthActionResult> => {
+      if (IS_DEMO) {
+        // Demo build: any valid credentials lead to the one-time-code screen.
+        setPendingVerification({ flow: 'register', email: email.trim().toLowerCase() });
+        return { success: true, message: 'Enter the one-time code to continue', nextRoute: '/verify-email' };
+      }
+
       setIsProcessing(true);
       try {
         const payload: AuthPayload = await authApi.login(email.trim().toLowerCase(), password);

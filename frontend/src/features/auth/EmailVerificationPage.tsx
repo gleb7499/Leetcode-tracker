@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Mail } from "@/src/shared/resources/icons"
 import { useAuth } from "@/src/shared/hooks/useAuth"
+import { DemoNotice } from "@/src/demo/demo-notice"
+import { IS_DEMO } from "@/src/demo/demo-config"
 import { AuthSubmitButton } from "./AuthSubmitButton"
 import { cn } from "@/lib/utils"
 
@@ -264,7 +266,12 @@ export function EmailVerificationPage() {
           </div>
         </div>
 
-        {isRegisterVerification && (
+        <DemoNotice title="Demo mode">
+          This is a test build, so no email is sent. Enter{" "}
+          <span className="font-semibold tracking-widest">000000</span> to continue.
+        </DemoNotice>
+
+        {isRegisterVerification && !IS_DEMO && (
           <div className="mb-4 py-3 px-4 rounded-xl text-sm bg-primary/10 text-primary border border-primary/20">
             Your account is not active yet. Verify your email to finish registration.
           </div>

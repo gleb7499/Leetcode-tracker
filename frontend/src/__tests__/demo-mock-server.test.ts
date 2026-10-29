@@ -78,6 +78,46 @@ describe("demo mock server", () => {
     expect(refreshed.body.accessToken).not.toBe(login.body.accessToken)
   })
 
+  it("accepts only the demo one-time code and applies the registered name", async () => {
+    const registered = await request<{ user: { name: string } }>("POST", "/auth/register", {
+      body: { name: "Ivan Petrov", email: "ivan@example.com", password: "Passw0rd!" },
+    })
+    expect(registered.status).toBe(201)
+
+    const wrong = await request<ErrorBody>("POST", "/auth/verify-email/confirm", {
+      body: { email: "ivan@example.com", code: "123456" },
+    })
+    expect(wrong.status).toBe(400)
+    expect(wrong.body.message).toBe("Invalid or expired code")
+
+    const confirmed = await request<AuthPayload>("POST", "/auth/verify-email/confirm", {
+      body: { email: "ivan@example.com", code: "000000" },
+    })
+    expect(confirmed.status).toBe(200)
+    expect(confirmed.body.user).toMatchObject({ email: "ivan@example.com", name: "Ivan Petrov" })
+  })
+
+  it("derives a name from the email when signing in without registering", async () => {
+    const confirmed = await request<AuthPayload>("POST", "/auth/verify-email/confirm", {
+      body: { email: "maria.sidorova@example.com", code: "000000" },
+    })
+    expect(confirmed.body.user.name).toBe("Maria Sidorova")
+  })
+
+  it("keeps the signed-in account across a data reset", async () => {
+    await request("POST", "/auth/register", {
+      body: { name: "Ivan Petrov", email: "ivan@example.com", password: "Passw0rd!" },
+    })
+    const confirmed = await request<AuthPayload>("POST", "/auth/verify-email/confirm", {
+      body: { email: "ivan@example.com", code: "000000" },
+    })
+    resetDemoData()
+    const me = await request<{ user: { email: string; name: string } }>("GET", "/auth/me", {
+      token: confirmed.body.accessToken,
+    })
+    expect(me.body.user).toMatchObject({ email: "ivan@example.com", name: "Ivan Petrov" })
+  })
+
   it("rejects /me requests without a bearer token with the contract error body", async () => {
     const result = await request<ErrorBody>("GET", "/me/tasks")
     expect(result.status).toBe(401)

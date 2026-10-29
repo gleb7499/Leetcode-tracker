@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { RotateCcw } from "lucide-react"
+import { useLocation } from "react-router-dom"
 import { IS_DEMO } from "./demo-config"
 
 async function resetDemo(): Promise<void> {
@@ -10,7 +11,6 @@ async function resetDemo(): Promise<void> {
     for (const key of Object.keys(window.localStorage)) {
       if (key.startsWith("leetcode-tracker.daily-progress")) window.localStorage.removeItem(key)
     }
-    window.sessionStorage.removeItem("leetcode-tracker.demo.autologin")
   } catch {
     // Storage is blocked: nothing to clear.
   }
@@ -19,8 +19,10 @@ async function resetDemo(): Promise<void> {
 
 export function DemoBanner() {
   const [isResetting, setIsResetting] = useState(false)
+  const { pathname } = useLocation()
 
-  if (!IS_DEMO) return null
+  // Reset only makes sense inside the app; auth screens carry their own notice.
+  if (!IS_DEMO || pathname === "/login" || pathname === "/verify-email") return null
 
   return (
     <div className="fixed bottom-4 left-4 z-30 flex items-center gap-2 rounded-full border border-border bg-card/80 py-1.5 pl-3 pr-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur">

@@ -7,6 +7,8 @@ import type { ReviewPolicyPreset, SettingsPatch, UserSettings } from "@/src/shar
 import type { TaskDto } from "@/src/shared/api/tasks"
 import {
   DEMO_DB_STORAGE_KEY,
+  DEMO_USER_NAME,
+  DEMO_VERIFICATION_CODE,
   DEMO_REVIEW_POLICY_PRESETS,
   computeReviewInterval,
   createSeedDb,
@@ -90,8 +92,17 @@ function loadDb(): DemoDb {
     return parsed
   }
   const seed = createSeedDb()
+  if (parsed) {
+    keepAccount(seed, parsed)
+  }
   saveDb(seed)
   return seed
+}
+
+/** A reseed refreshes the data, not who is signed in. */
+function keepAccount(seed: DemoDb, previous: DemoDb): void {
+  seed.user.email = previous.user.email
+  seed.user.name = previous.user.name
 }
 
 function saveDb(db: DemoDb): void {
@@ -109,7 +120,9 @@ function saveDb(db: DemoDb): void {
 
 /** Test and reset hook: restores the seed database. */
 export function resetDemoData(): void {
-  saveDb(createSeedDb())
+  const seed = createSeedDb()
+  keepAccount(seed, loadDb())
+  saveDb(seed)
 }
 
 function parseStoredDb(raw: string): DemoDb | null {
@@ -499,6 +512,24 @@ function sessionResponse(ctx: RequestContext, email: string, message: string): R
   return jsonResponse(200, payload, ctx.requestId)
 }
 
+/** "alex.smith+demo@mail.com" -> "Alex Smith"; used when signing in without registering. */
+function nameFromEmail(email: string): string {
+  const words = (email.split("@")[0] ?? "").split(/[^a-z]+/i).filter(Boolean)
+  return words.length > 0 ? words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : DEMO_USER_NAME
+}
+
+/** Registration name wins; otherwise a new email gets a name derived from it. */
+function applyAccountName(email: string): void {
+  const db = loadDb()
+  if (db.pendingName?.email === email) {
+    db.user.name = db.pendingName.name
+  } else if (db.user.email !== email) {
+    db.user.name = nameFromEmail(email)
+  }
+  delete db.pendingName
+  saveDb(db)
+}
+
 function neutralMessage(ctx: RequestContext, message: string): Response {
   return jsonResponse(200, { success: true, message }, ctx.requestId)
 }
@@ -534,7 +565,10 @@ function dispatchAuth(ctx: RequestContext): Response {
       if (password.length < 8 || password.length > 128) {
         validation("Password must be between 8 and 128 characters")
       }
-      const user: UserDto = { id: loadDb().user.id, email, name, emailVerified: false }
+      const db = loadDb()
+      db.pendingName = { email, name }
+      saveDb(db)
+      const user: UserDto = { id: db.user.id, email, name, emailVerified: false }
       return jsonResponse(
         201,
         { success: true, message: "Account created. Enter the verification code sent to your email.", user },
@@ -549,7 +583,11 @@ function dispatchAuth(ctx: RequestContext): Response {
     case "verify-email/confirm": {
       const body = requireObject(ctx.body)
       const email = requiredText(body.email, "Email is required").trim().toLowerCase()
-      requiredText(body.code, "Verification code is required")
+      const code = requiredText(body.code, "Verification code is required").trim()
+      if (code !== DEMO_VERIFICATION_CODE) {
+        badRequest("Invalid or expired code")
+      }
+      applyAccountName(email)
       return sessionResponse(ctx, email, "Email verified")
     }
     case "refresh": {

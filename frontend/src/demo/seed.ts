@@ -11,6 +11,8 @@ export type DemoSourceType = "leetcode_url" | "manual"
 export const DEMO_USER_EMAIL = DEMO_EMAIL
 export const DEMO_USER_PASSWORD = DEMO_PASSWORD
 export const DEMO_USER_NAME = "Alex"
+/** The only one-time code the demo accepts (shown on the verification screen). */
+export const DEMO_VERIFICATION_CODE = "000000"
 export const DEMO_DB_STORAGE_KEY = "leetcode-tracker.demo.db.v1"
 
 export interface DemoUserRecord {
@@ -65,6 +67,8 @@ export interface DemoDb {
   version: 1
   /** Local day the seed dates were computed for; an older database is reseeded. */
   seededOn?: string
+  /** Name typed at registration, applied to the account once the one-time code is confirmed. */
+  pendingName?: { email: string; name: string }
   user: DemoUserRecord
   nextTaskId: number
   tasks: DemoTaskRecord[]
